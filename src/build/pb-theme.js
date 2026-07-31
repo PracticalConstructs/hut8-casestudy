@@ -53,14 +53,88 @@ function remapColors(s) {
 /* Typography and button overrides: Instrument Serif italic display over
    Instrument Sans body. Appended after the main style block so it wins. */
 const PB_TYPE_CSS = `
-:root{--font-head:"Instrument Serif",Georgia,serif;--font-body:"Instrument Sans","Segoe UI",system-ui,sans-serif}
+/* ---- DSR gallery front end: paper canvas, hairlines, uppercase micro-nav ---- */
+:root{--font-head:"Instrument Serif",Georgia,serif;--font-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+--bg:#f5f3e6;--bg-2:#eeebd8;--panel:#fbfaf1;--panel-2:#efecdb;--line:#c9c5aa;--line-soft:#dcd8c2;
+--ink:#191f12;--ink-2:#414a35;--ink-3:#79826a;--navy:#64744a;--steel:#64744a;--berry:#3c4a26;--berry-2:#d14a15;
+--orange:#d14a15;--gold:#5f6f38;--skylt:#3e6f8e;--blue:#4a7d9e;--bluelt:#5b9cc4;--violet:#6d7d3f;--s1:#64744a;--s2:#d14a15;--radius:0px}
 h1,h2,h3{font-style:italic;font-weight:400;letter-spacing:0}
-#hero h1{font-style:italic;font-weight:400;letter-spacing:-.01em}
-.kicker{font-family:var(--font-body);font-style:normal;font-weight:600;letter-spacing:.18em}
-.btn{font-family:var(--font-head);font-style:italic;font-weight:400;font-size:17.5px;border-radius:999px;padding:14px 28px}
-.hero-badge{font-style:italic;font-size:13.5px}
-.bar-logo{font-family:var(--font-head);font-style:italic;font-weight:400}
+h2{color:var(--ink)}
+.kicker{font-family:var(--font-body);font-style:normal;font-weight:600;letter-spacing:.2em}
 .tile .v{font-style:italic}
+.tile .v em{color:var(--orange)}
+.bar-logo{font-family:var(--font-head);font-style:italic;font-weight:400}
+.viz-root{--surface-1:#fbfaf1;--text-primary:#191f12;--text-secondary:#414a35;--grid:#d9d5bd;--series-1:#64744a;--series-2:#d14a15}
+#chart-tip{box-shadow:0 6px 24px rgba(40,40,20,.18)}
+.btn{border-radius:0;background:none;border:1px solid var(--ink);color:var(--ink);font-family:var(--font-body);font-style:normal;font-weight:600;font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding:14px 26px}
+.btn:hover{transform:none;filter:none;border-color:var(--orange);color:var(--orange)}
+.btn-sky,.btn-orange,.btn-gold{background:none;color:var(--ink)}
+/* landing */
+.pb-bar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:baseline;justify-content:space-between;padding:20px 4vw;pointer-events:none;mix-blend-mode:multiply}
+.pb-bar>*{pointer-events:auto}
+.pb-word{font-family:var(--font-head);font-style:italic;font-size:21px;color:var(--ink)}
+.pb-word .eight{color:var(--orange)}
+.pb-nav{display:flex;gap:28px}
+.pb-nav a{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ink)}
+.pb-nav a:hover{color:var(--orange);text-decoration:none}
+#pb-statement{padding:19vh 4vw 7vh;border-top:none}
+#pb-statement h1{font-size:clamp(34px,4.9vw,66px);line-height:1.16;max-width:1120px;color:var(--ink)}
+#pb-statement h1 .accent{color:var(--orange)}
+.pb-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:28px;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+#hero{position:relative;min-height:0;height:62vh;margin:0 4vw;border:1px solid var(--ink);padding:0;display:block;overflow:hidden}
+#hero::after{display:none}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
+.pb-caption{margin:10px 4vw 0;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);display:flex;justify-content:space-between;max-width:none}
+#pb-index{border-top:none;padding:10vh 0 12vh}
+.pb-index-row{display:flex;align-items:baseline;gap:26px;padding:30px 4vw;border-top:1px solid var(--line);transition:background .15s}
+.pb-index-row:last-child{border-bottom:1px solid var(--line)}
+.pb-index-row:hover{background:var(--panel);text-decoration:none}
+.pb-index-row .no{font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--ink-3);flex:0 0 52px}
+.pb-index-row .ti{font-family:var(--font-head);font-style:italic;font-size:clamp(24px,3.1vw,40px);line-height:1.1;color:var(--ink);flex:1}
+.pb-index-row:hover .ti{color:var(--orange)}
+.pb-index-row .mt{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-align:right}
+/* summary */
+#view-summary .sum-top{background:rgba(245,243,230,.92)}
+/* demo chrome */
+#view-demo{background:var(--bg)}
+.demo-top{background:var(--bg)}
+.demo-main{padding:10px 4vw 8px}
+#demo-stage{background:#f0edda;border:1px solid var(--ink);border-radius:0}
+.hud-btn{background:rgba(251,250,241,.9);border-radius:0;color:var(--ink-2)}
+.hud-btn:hover{color:var(--orange)}
+.hud-btn.open{color:var(--orange);border-color:var(--orange)}
+.drawer,.pop{background:rgba(251,250,241,.95);border-radius:0}
+.site-btn,.act-btn,.clash,.rib-btn,.tc-btn{border-radius:0}
+.site-btn.active{background:var(--panel-2)}
+.site-btn img{background:#e7e4cf}
+.site-btn .tag{color:var(--gold);border-color:var(--line)}
+.orbit-hint,.pick-hint{background:rgba(245,243,230,.85);color:var(--ink-3);border-radius:0}
+.site-title b{color:#f6f4dd;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.site-title span{color:#cfd6bd;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+#pick-card{background:rgba(251,250,241,.96);border-radius:0}
+#pick-card h4{color:var(--ink)}
+#pick-card .pc-tag{background:#efecdb;color:var(--ink)}
+#demo-json{background:#efecdb;color:#414a35}
+.mt-stage.active .mt-dot{color:#fff;box-shadow:0 0 10px rgba(209,74,21,.45)}
+.mt-stage.active .mt-label{color:var(--orange)}
+#mini-fill{background:var(--orange)}
+#btn-tutorial{color:var(--orange);border-radius:0}
+.rib-btn:hover,.rib-btn.active{color:var(--orange)}
+.rib-sheet{border-radius:0;box-shadow:0 12px 40px rgba(40,40,20,.2)}
+.rib-sheet h4{color:var(--ink)}
+/* tutorial */
+#tut-dim{background:rgba(25,31,18,.45)}
+#tut-spot{border-color:var(--orange);border-radius:0;box-shadow:0 0 0 6px rgba(209,74,21,.2),0 0 30px rgba(209,74,21,.22)}
+#tut-card{background:var(--panel);border-radius:0;box-shadow:0 16px 50px rgba(30,30,15,.3)}
+#tut-card h4{color:var(--ink)}
+.tc-btn.primary{color:#fff}
+.loop-grid,.tiles,.hw-grid,.viz-root{border-radius:0}
+@media (max-width:900px){
+  #pb-statement{padding-top:15vh}
+  #hero{height:46vh}
+  .pb-index-row .mt{display:none}
+  .pb-nav{gap:16px}
+}
 `;
 
 /* Scene decoration, inserted inside the app IIFE (function declarations
@@ -178,9 +252,11 @@ const PB_JS = `
   }
   function pbGround(scene, R, y) {
     var K = pbGeo();
-    var g = pbMesh(K.cyl, pbMat(0x141d0e, { rough: 1, metal: 0 }), R, 0.04, R, 0, y, 0);
+    var g = pbMesh(K.cyl, pbMat(0x243218, { rough: 1, metal: 0 }), R, 0.04, R, 0, y, 0);
     scene.add(g);
-    scene.fog = new THREE.Fog(0x0f170a, R * 0.95, R * 3.4);
+    scene.background = new THREE.Color(0xf2efdd);
+    scene.fog = new THREE.Fog(0xf2efdd, R * 0.95, R * 3.4);
+    scene.add(new THREE.AmbientLight(0xf2efdd, 0.5));
   }
   function pbFence(scene, hw, hd) {
     var K = pbGeo();
@@ -315,15 +391,16 @@ const PB_JS = `
     pbMasts(scene, cfg.hw, cfg.hd);
     } catch (e) { if (window.console) console.error('decor', e); }
   }
-  function pbHeroDecorate(scene) {
+  function pbHeroDecorate(scene, orbit) {
     try {
+    if (orbit) { orbit.radius = 42; orbit.rMin = 18; orbit.phi = 0.5; }
     var rnd = pbRand(29);
     pbGround(scene, 58, -0.3);
     pbScatter(scene, rnd, 0, 0, 19, 40, 44, 0);
     pbPond(scene, rnd, 21, 13, 4.2, -0.25);
     pbFence(scene, 16.5, 10.5);
     var moon = new THREE.Mesh(new THREE.SphereGeometry(2.6, 16, 12),
-      new THREE.MeshBasicMaterial({ color: 0xf2eec2, fog: false }));
+      new THREE.MeshBasicMaterial({ color: 0xd14a15, fog: false }));
     moon.position.set(-30, 16, -44);
     scene.add(moon);
     } catch (e) { if (window.console) console.error('decor', e); }

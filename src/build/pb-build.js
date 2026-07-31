@@ -45,11 +45,42 @@ template = must(template, `<link rel="icon" href="data:image/svg+xml,%3Csvg xmln
   '<link rel="icon" type="image/png" href="assets/favicon.png">');
 template = must(template, '{{FONTS_CSS}}', fontsCss);
 
-/* hero */
-template = must(template, '<h1>YURT <span class="eight">8</span></h1>\n    <div><span class="hero-badge">A case study for Hut 8</span></div>',
-  '<h1 style="font-size:clamp(46px,8.2vw,98px)">Practical <span class="eight">BIM</span></h1>\n    <div><span class="hero-badge">A working concept for owner operators</span></div>');
-template = must(template, '      <a class="btn btn-sky" href="Yurt8-Case-Study.pdf" download>PDF Condensed Summary</a>\n      <a class="btn btn-orange" href="#demo" id="btn-demo">Demo the Tool</a>\n      <a class="btn btn-gold" href="#summary" id="btn-summary">Detailed Summary</a>',
-  '      <a class="btn btn-orange" href="#demo" id="btn-demo">Demo the Tool</a>\n      <a class="btn btn-gold" href="#summary" id="btn-summary">Detailed Summary</a>\n      <a class="btn btn-sky" href="index.html">Back to Portfolio</a>');
+/* landing: the whole view is replaced with the gallery front end
+   (fixed micro-nav, statement, framed live model, index list) */
+{
+  const a = template.indexOf('<div id="view-landing" class="view active">');
+  const b = template.indexOf('</div><!-- /view-landing -->', a);
+  if (a < 0 || b < 0) throw new Error('landing block not found');
+  const landing = [
+    '<div id="view-landing" class="view active">',
+    '<header class="pb-bar">',
+    '  <span class="pb-word">Practical <span class="eight">BIM</span></span>',
+    '  <nav class="pb-nav">',
+    '    <a href="#demo">Demo</a>',
+    '    <a href="#summary">Summary</a>',
+    '    <a href="index.html">Portfolio</a>',
+    '  </nav>',
+    '</header>',
+    '<section id="pb-statement" aria-label="Introduction">',
+    '  <h1>One system that watches every project, <span class="accent">generates the next design move</span>, and learns from both.</h1>',
+    '  <div class="pb-meta"><span>A working concept for owner operators</span><span>Andres Felipe Pena</span><span>New York City</span></div>',
+    '</section>',
+    '<section id="hero" aria-label="Live model">',
+    '  <canvas id="hero-canvas" aria-hidden="true"></canvas>',
+    '</section>',
+    '<p class="pb-caption"><span>Assembly of a data hall, live model</span><span>drag to orbit</span></p>',
+    '<section id="pb-index" aria-label="Index">',
+    '  <a class="pb-index-row" href="#demo" id="btn-demo"><span class="no">01</span><span class="ti">Demo the Tool</span><span class="mt">Three sites, one live model</span></a>',
+    '  <a class="pb-index-row" href="#summary" id="btn-summary"><span class="no">02</span><span class="ti">Detailed Summary</span><span class="mt">The engine, the money, the homework</span></a>',
+    '  <a class="pb-index-row" href="#demo"><span class="no">03</span><span class="ti">Data Center One</span><span class="mt">Southwest US (example), operating</span></a>',
+    '  <a class="pb-index-row" href="#demo"><span class="no">04</span><span class="ti">Data Center Two</span><span class="mt">Gulf Coast US (example), under construction</span></a>',
+    '  <a class="pb-index-row" href="#demo"><span class="no">05</span><span class="ti">Hydro Station</span><span class="mt">Portfolio concept</span></a>',
+    '  <a class="pb-index-row" href="index.html"><span class="no">06</span><span class="ti">Back to Portfolio</span><span class="mt">More work by Andres</span></a>',
+    '</section>',
+    '</div><!-- /view-landing -->',
+  ].join('\n');
+  template = template.slice(0, a) + landing + template.slice(b + '</div><!-- /view-landing -->'.length);
+}
 template = template.split('YURT <span class="eight">8</span><span class="back">&larr; back</span>')
   .join('P<span class="eight">BIM</span><span class="back">&larr; back</span>');
 
@@ -186,7 +217,7 @@ app = remapColors(app);
 template = must(template, '</head>', '<style>' + PB_TYPE_CSS + '</style>\n</head>');
 app = must(app, '      scenes[id] = s;', '      pbDecorate(s, id);\n      scenes[id] = s;');
 app = must(app, '    var CYCLE = reduceMotion ? 0 : 22000;',
-  '    pbHeroDecorate(scene);\n    var CYCLE = reduceMotion ? 0 : 22000;');
+  '    pbHeroDecorate(scene, orbit);\n    var CYCLE = reduceMotion ? 0 : 22000;');
 app = must(app, '\n  route();', '\n' + PB_JS + '\n  route();');
 
 let html = template
