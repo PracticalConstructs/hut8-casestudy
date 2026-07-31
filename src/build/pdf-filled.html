@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Yurt 8: A Case Study in Digital Delivery for Hut 8</title>
+<style>
+:root{
+  --ink:#1a2230; --muted:#5a6474; --soft:#8a93a5;
+  --amber:#b97700; --amber-bright:#f0a028; --navy:#0b1524; --teal:#0e7d6b;
+  --panel:#f4f6f9; --line:#d9dee8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:Letter;margin:0}
+html,body{width:8.5in}
+body{font-family:"Liberation Sans",Arial,sans-serif;color:var(--ink);font-size:9.3pt;line-height:1.42;background:#fff}
+.page{width:8.5in;height:11in;padding:.42in .55in;position:relative;overflow:hidden;page-break-after:always;display:flex;flex-direction:column}
+.page:last-child{page-break-after:auto}
+
+/* header band */
+.band{background:var(--navy);color:#fff;border-radius:10px;padding:13px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.band h1{font-size:23pt;letter-spacing:-.01em;line-height:1}
+.band h1 span{color:var(--amber-bright)}
+.band .tag{font-size:9.5pt;color:#c6cedd;margin-top:4px}
+.band .who{text-align:right;font-size:8pt;color:#c6cedd;line-height:1.5}
+.band .who b{color:#fff;font-size:9.5pt}
+.band .who a{color:#7fd4e0;text-decoration:none}
+
+h2{font-size:12.5pt;margin:10px 0 4px;color:var(--ink)}
+h2 .n{color:var(--amber);font-size:8.5pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:1px}
+p.intro{font-size:9.6pt;color:var(--muted);max-width:7in}
+
+/* principles */
+.chips{display:flex;gap:6px;margin:7px 0 2px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:2.5px 10px;font-size:8pt;font-weight:700;color:var(--ink);white-space:nowrap}
+
+/* tracker */
+.tracker{margin-top:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 12px 10px}
+.t-line{display:flex;position:relative;margin-bottom:2px}
+.t-line::before{content:"";position:absolute;top:8px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,var(--amber-bright),var(--teal));border-radius:2px}
+.t-cell{flex:1;text-align:center;position:relative;padding:0 3px}
+.t-cell .dot{width:17px;height:17px;border-radius:50%;background:#fff;border:3.5px solid var(--amber-bright);margin:0 auto 4px;position:relative;z-index:1}
+.t-cell:nth-child(5) .dot,.t-cell:nth-child(6) .dot,.t-cell:nth-child(7) .dot{border-color:var(--teal)}
+.t-cell b{display:block;font-size:8.2pt;line-height:1.15;margin-bottom:2px}
+.t-cell span{font-size:7pt;color:var(--muted);line-height:1.3;display:block}
+.t-foot{font-size:7.6pt;color:var(--muted);margin-top:7px;border-top:1px solid var(--line);padding-top:6px}
+
+/* loop columns */
+.loop{display:flex;gap:8px;margin-top:6px}
+.loop .col{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.loop h3{font-size:10pt;margin-bottom:2px}
+.loop .col:nth-child(1) h3{color:var(--amber)}
+.loop .col:nth-child(2) h3{color:#0d6efd}
+.loop .col:nth-child(3) h3{color:var(--teal)}
+.loop .sub{font-size:7.8pt;color:var(--muted);margin-bottom:4px}
+.loop ul{list-style:none}
+.loop li{font-size:7.8pt;color:var(--ink);padding:1.2px 0 1.2px 11px;position:relative;line-height:1.3}
+.loop li::before{content:"";position:absolute;left:0;top:6.5px;width:4.5px;height:4.5px;border-radius:50%;background:var(--soft)}
+.schema-bar{margin-top:6px;background:var(--navy);color:#dfe7f5;border-radius:8px;padding:7px 12px;font-size:8.2pt}
+.schema-bar b{color:var(--amber-bright)}
+.schema-bar code{font-family:"Liberation Mono",monospace;font-size:7.4pt;color:#9fd8ff}
+
+/* bottom strip */
+.strip{display:flex;gap:8px;margin-top:6px}
+.strip .s-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.strip h4{font-size:8.6pt;margin-bottom:2px}
+.strip p{font-size:7.7pt;color:var(--muted);line-height:1.35}
+.strip pre{font-family:"Liberation Mono",monospace;font-size:6.9pt;line-height:1.45;color:var(--ink);margin-top:3px}
+
+.pfoot{margin-top:auto;padding-top:8px;font-size:7.4pt;color:var(--soft);display:flex;justify-content:space-between;border-top:1px solid var(--line)}
+
+/* ============ page 2 ============ */
+.p2-grid{display:flex;gap:14px;margin-top:2px;flex:1}
+.p2-left{flex:1.15}
+.p2-right{flex:1;display:flex;flex-direction:column;gap:8px}
+
+.vt{position:relative;padding-left:16px;margin-top:4px}
+.vt::before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:2.5px;background:var(--line);border-radius:2px}
+.vt .m{position:relative;padding-bottom:8.5px}
+.vt .m::before{content:"";position:absolute;left:-15.5px;top:3px;width:8px;height:8px;border-radius:50%;background:#fff;border:2.5px solid var(--amber-bright)}
+.vt .m.team::before{border-color:var(--teal)}
+.vt .when{font-size:7pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.vt .m.team .when{color:var(--teal)}
+.vt h3{font-size:9.6pt;margin:0.5px 0 1px}
+.vt p{font-size:7.9pt;color:var(--muted);line-height:1.35;max-width:3.6in}
+.vt .chk{font-size:7.4pt;color:var(--ink);background:var(--panel);border-left:2.5px solid var(--teal);border-radius:4px;padding:3px 7px;margin-top:3px;max-width:3.55in}
+.vt .chk b{color:var(--teal)}
+
+.tiles{display:flex;gap:7px}
+.tile{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 9px;text-align:center}
+.tile .v{font-size:13pt;font-weight:700;color:var(--ink)}
+.tile .v.hot{color:var(--amber)}
+.tile .l{font-size:6.9pt;color:var(--muted);line-height:1.25;margin-top:1px}
+
+table.money{width:100%;border-collapse:collapse;font-size:7.8pt}
+table.money th{text-align:left;font-size:6.8pt;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);padding:3px 6px;border-bottom:1.5px solid var(--line)}
+table.money th.r,table.money td.r{text-align:right;font-variant-numeric:tabular-nums}
+table.money td{padding:2.8px 6px;border-bottom:1px solid #e8ecf2;color:var(--muted)}
+table.money td:first-child{color:var(--ink)}
+table.money tr.sec td{background:var(--panel);font-weight:700;color:var(--ink);font-size:7.4pt}
+table.money tr.total td{font-weight:700;color:var(--ink);border-top:1.5px solid var(--line)}
+
+.mini{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 10px}
+.mini h4{font-size:8.5pt;margin-bottom:2px}
+.mini p{font-size:7.5pt;color:var(--muted);line-height:1.34}
+.mini p b{color:var(--ink)}
+.src{font-size:6.7pt;color:var(--soft);line-height:1.4}
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page">
+  <div class="band">
+    <div>
+      <h1>YURT <span>8</span></h1>
+      <div class="tag">A case study in digital delivery for the Hut 8 portfolio</div>
+    </div>
+    <div class="who">
+      <b>Andres Felipe Pena</b><br>
+      andres.p.22455@gmail.com &nbsp;·&nbsp; 347 891 5547<br>
+      Interactive demo: <a href="https://practicalconstructs.github.io/hut8-casestudy/">practicalconstructs.github.io/hut8-casestudy</a>
+    </div>
+  </div>
+
+  <p class="intro">Yurt 8 is one system that watches every project in the portfolio, generates the next design move on demand, and learns from both, so each pass gets faster, cheaper, and sharper. It is built so leadership sees dollars and time move every single month, and it is built to Hut 8's mission: scaling AI, and using AI to scale itself. Every element below passed five tests or got cut:</p>
+  <div class="chips">
+    <span class="chip">Keep it simple</span><span class="chip">Cut cost</span><span class="chip">Cut time</span><span class="chip">Raise quality</span><span class="chip">Built to scale, never stagnant</span>
+  </div>
+
+  <h2><span class="n">The face</span>A pizza tracker for buildings</h2>
+  <p class="intro" style="font-size:8.6pt">Domino's earned trust by letting people watch the pizza move. Owners deserve the same view of their capital projects. Every Hut 8 project lives on one chronological tracker, and every stage is wired to the live data that matters for it. Not a status slide. The live state of the work.</p>
+  <div class="tracker">
+    <div class="t-line">
+      <div class="t-cell"><span class="dot"></span><b>Site Selection</b><span>Land, power, fiber, and tax scored on data before a dollar commits</span></div>
+      <div class="t-cell"><span class="dot"></span><b>Preconstruction</b><span>Budgets, schedules, and contracts lined up as watchable lines</span></div>
+      <div class="t-cell"><span class="dot"></span><b>Design</b><span>Live model feeds; clashes surface the day they are drawn</span></div>
+      <div class="t-cell"><span class="dot"></span><b>Construction</b><span>RFIs in plain English, with the dollars and days they put at risk</span></div>
+      <div class="t-cell"><span class="dot"></span><b>Procurement</b><span>Long lead equipment tracked like packages, tied to the schedule</span></div>
+      <div class="t-cell"><span class="dot"></span><b>Fit-out</b><span>Racks, power, cooling; every asset gets its lifetime ID here</span></div>
+      <div class="t-cell"><span class="dot"></span><b>Operations</b><span>The building starts reporting to you, through the same system</span></div>
+    </div>
+    <div class="t-foot"><b>Running under every stage:</b> clash detection, BIM, information management, model management, user management (internal vs external), project management, and project delivery. I would also add cost, schedule, safety and QA/QC, commissioning and handover, and energy tracking; those five are flagged for your review.</div>
+  </div>
+
+  <h2><span class="n">The engine</span>Review. Generate. Learn. Repeat.</h2>
+  <div class="loop">
+    <div class="col">
+      <h3>Review</h3>
+      <div class="sub">See everything as it happens, not at the monthly meeting.</div>
+      <ul>
+        <li>Live feeds of working Revit models, CAD files, and standardized spreadsheets</li>
+        <li>RFIs, submittals, and financials translated into plain English for the owner</li>
+        <li>Clashes and design issues surfaced as they occur, before they become change orders</li>
+        <li>Connects to ACC as the main hub, plus contractors' Procore, Tableau, Power BI, and Microsoft Project</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Generate</h3>
+      <div class="sub">Design moves in seconds instead of weeks, from my proven generative work on live programs.</div>
+      <ul>
+        <li>Deterministic guardrails alternate with AI generators, gate after gate, so output is fast and safe</li>
+        <li>Test fits and sizing with no third party fees for work that needs no stamp</li>
+        <li>Runs in a browser through Autodesk's cloud; nobody needs Revit installed</li>
+        <li>Swap cabinet vendors, re-size MEP and containment, re-wire redundant cooling, swap GPUs; every asset number is preserved</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Learn</h3>
+      <div class="sub">Every pass makes the next one better. The system never stands still.</div>
+      <ul>
+        <li>AWS Bedrock agents on S3 data lakes that grow with every review and generation</li>
+        <li>Knowledge gated by review before it teaches anything</li>
+        <li>Tied to the codes, standards, and rules Hut 8 and its vendors flag as critical</li>
+        <li>Grows from stakeholder input and exemplar designs fed in as standardized JSON</li>
+      </ul>
+    </div>
+  </div>
+  <div class="schema-bar"><b>One shared language:</b> Review, Generate, and Learn all read and write the exact same JSON format <code>{ coordinates, parameters, relationships, patterns }</code>. Nothing gets translated between steps, so nothing gets lost between steps.</div>
+
+  <div class="strip">
+    <div class="s-card">
+      <h4>ACC, kept deliberately simple</h4>
+      <p>Vendors do day to day design in Autodesk Construction Cloud, simplified through clean permissions. For Hut 8 it is a limited tool on purpose: a data source we mine by API. Owners do not need forty modules. They need the tracker.</p>
+    </div>
+    <div class="s-card">
+      <h4>ISO 19650 without the ceremony</h4>
+      <pre>HUT8-[PROJECT]
+├ 01-WIP        each vendor's own working area
+├ 02-SHARED     coordinated, clash reviewed
+├ 03-PUBLISHED  approved to build, read only
+└ 04-ARCHIVE    every version, kept automatically</pre>
+    </div>
+    <div class="s-card">
+      <h4>Assets that report for life</h4>
+      <p>Every asset gets one ID at design and keeps it forever: in the model, on the physical tag, in the sensor feed. IoT site monitoring flows into Operations through the same JSON. The over-engineered version of this standard that never survives an American job site is exactly what this is not.</p>
+    </div>
+  </div>
+
+  <div class="pfoot"><span>Yurt 8, a playful nod to Hut 8: same mission, pointed inward.</span><span>Page 1 of 2</span></div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page">
+  <h2 style="margin-top:0"><span class="n">The plan</span>Twenty four months, reported monthly in dollars and days</h2>
+  <p class="intro" style="font-size:8.6pt">Build the tool, build the team, then maintain and scale both. Every month closes with one page for leadership: dollars moved, days moved, and which scenario the data came from, alpha, beta, or live. If a month cannot show both numbers, that month failed and I will say so plainly.</p>
+
+  <div class="p2-grid">
+    <div class="p2-left">
+      <div class="vt">
+        <div class="m"><span class="when">Months 1 to 2</span><h3>Wire into what exists</h3><p>ACC mining live on one active project. Tracker alpha stands up. First plain English feeds reach the owner. Existing contractors and contracts keep their tools; Yurt 8 conforms to the work.</p><div class="chk"><b>Checkpoint:</b> first clash caught on screen, priced against the change order it replaced. Source: live.</div></div>
+        <div class="m"><span class="when">Months 3 to 4</span><h3>Review, fully live</h3><p>Model feeds, financials, and clash surfacing across the active portfolio. Procore and schedule connections land.</p><div class="chk"><b>Checkpoint:</b> avoidable slowdowns identified and priced, monthly. Source: live.</div></div>
+        <div class="m"><span class="when">Months 5 to 6</span><h3>Generate, first wins</h3><p>Test fits and sizing on the real cabinet library. Work that took weeks and third party fees now takes seconds.</p><div class="chk"><b>Checkpoint:</b> third party design fees eliminated, itemized per run. Source: beta on live layouts.</div></div>
+        <div class="m team"><span class="when">Months 7 to 9</span><h3>Second renaissance engineer</h3><p>Generate moves into the browser; anyone Hut 8 authorizes can run it without Revit. Hire two arrives.</p><div class="chk"><b>Checkpoint:</b> design cycle time, before vs after, in days. Source: live.</div></div>
+        <div class="m"><span class="when">Months 10 to 12</span><h3>Learn, gated and growing</h3><p>Knowledge bases go live, gated by review, tied to the codes and standards Hut 8 flags. Year one closes with a full tally.</p><div class="chk"><b>Checkpoint:</b> year one savings tally, line by line. Source: live plus beta.</div></div>
+        <div class="m team"><span class="when">Months 13 to 18</span><h3>Portfolio wide, third engineer</h3><p>Every active project on the tracker. IoT monitoring lights up Operations. New projects start with generative site selection from day one.</p><div class="chk"><b>Checkpoint:</b> change order rate vs baseline, portfolio wide. Source: live.</div></div>
+        <div class="m"><span class="when">Months 19 to 24</span><h3>Full lifecycle, compounding</h3><p>Site selection through operations on one loop. Every review sharpens generation; every generation feeds the lakes.</p><div class="chk"><b>Checkpoint:</b> year two tally, and year three priced from real data. Source: live.</div></div>
+      </div>
+    </div>
+
+    <div class="p2-right">
+      <div class="tiles">
+        <div class="tile"><div class="v hot">$350K</div><div class="l">Year one ask, all in</div></div><div class="tile"><div class="v">$4.0M</div><div class="l">Year one savings, conservative</div></div><div class="tile"><div class="v">11x</div><div class="l">Year one return</div></div><div class="tile"><div class="v">$10M</div><div class="l">Year two savings</div></div>
+      </div>
+      <table class="money">
+        <thead><tr><th>Line</th><th class="r">Year 1</th><th class="r">Year 2</th></tr></thead><tbody><tr class="sec"><td colspan="3">What it costs</td></tr><tr><td>Me, all in</td><td class="r">$250K</td><td class="r">$350K</td></tr><tr><td>Engineers two and three ($260K each)</td><td class="r">$0</td><td class="r">$520K</td></tr><tr><td>Licensing (ACC, APS)</td><td class="r">$45K</td><td class="r">$90K</td></tr><tr><td>Cloud and API tokens</td><td class="r">$55K</td><td class="r">$90K</td></tr><tr class="total"><td>Total cost</td><td class="r">$350K</td><td class="r">$1.05M</td></tr><tr class="sec"><td colspan="3">What it returns</td></tr><tr><td>Change orders avoided</td><td class="r">$2.4M</td><td class="r">$6.0M</td></tr><tr><td>Third party design fees eliminated</td><td class="r">$0.9M</td><td class="r">$1.8M</td></tr><tr><td>Schedule value captured</td><td class="r">$0.7M</td><td class="r">$2.2M</td></tr><tr class="total"><td>Total savings, conservative case</td><td class="r">$4.0M</td><td class="r">$10.0M</td></tr></tbody>
+      </table>
+      <div class="mini">
+        <h4>Why these savings are real at Hut 8's scale</h4>
+        <p>Hut 8 has 830 MW under construction at its guided $9M to $11M per MW: roughly $8B in flight, matching the $7.5B of project bonds closed in 2026. Studies put design error change orders at 3 to 5% of construction budget; documented BIM clash detection savings reach 10% of contract value. Your Tier 1 partners already run BIM, so these claims take only the owner side residual, well under 1% of watched work. The same benchmarks at base case capture put year one between $8M and $16M; I pitch the conservative number on purpose. And the bonds cost about $1.27M per day in interest at full draw, so a handful of protected days covers this program many times over.</p>
+      </div>
+      <div class="mini">
+        <p><b>On meetings:</b> meetings are for decisions. Status lives on the tracker. No decision, no meeting.</p>
+        <p style="margin-top:3px"><b>On the team:</b> one, then three. Every hire a renaissance engineer who rejects role boundaries. Critical thought, delivered results, first principles, real teamwork. No seat fillers, ever. The system prevents chaos; the team stays drilled for forest fires anyway.</p>
+      </div>
+      <div class="mini">
+        <p><b>Show my homework:</b> the interactive demo opens the hood: the exact prompt that drove my AI build agents, the architecture, and the sources. I built this in two days with a multi agent setup I designed, and I can build the same without AI: HTML, Python, C#, C, and .NET are home turf. Point me outside my comfort zone and the same financial logic arrives; I learn fast, and I stay motivated and curious.</p>
+        <p style="margin-top:3px"><b>The 3D you will see there:</b> web native, ships as one file, runs offline, no installs, no servers. When simulation depth earns its cost, the path is NVIDIA Omniverse and the open source OpenUSD ecosystem.</p>
+      </div>
+      <p class="src">Sources: Hut 8 Q1 2026 results (May 6, 2026); FY2025 Form 10-K; Beacon Point release (July 20, 2026); Vega energization (June 30, 2025); JLL 2025 data center cost index; AIA change order study; Stanford CIFE BIM benchmark; Navigant rework and RFI studies. Full list with links: github.com/PracticalConstructs/hut8-casestudy.</p>
+    </div>
+  </div>
+
+  <div class="pfoot"><span>Andres Felipe Pena · andres.p.22455@gmail.com · 347 891 5547 · Demo: practicalconstructs.github.io/hut8-casestudy</span><span>Page 2 of 2</span></div>
+</div>
+
+</body>
+</html>
