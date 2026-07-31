@@ -37,6 +37,18 @@ five minute version.
   pitched as the conservative case, with the base math shown. Best new ammo: the
   $7.5B of project bonds cost about $1.27M per day in interest at full draw.
 
+**The adversarial review** (second workflow: 3 reviewers, then a skeptic per finding)
+- 2 confirmed issues, both fixed: a banned hype word in the team copy, and a line
+  that said Beacon Point's first hall is "already built" to the DSX design when it
+  is only designed to it (it delivers 2027).
+- 2 money-math complaints were refuted on verification (reviewers had read stale
+  pre-edit text; the shipped numbers are internally consistent).
+- 10 minor findings: applied 9 (financials named in the Review card, per-headcount
+  cost split, two passive sentences activated, MCP and wet seal glossed for laymen,
+  outcome attached to the "proven" claim, $27B/$26.6B reconciled to the sourced
+  figure, sources dated precisely). Declined 1: Bedrock/S3 stay by name because your
+  brief mandates them and a cloud product is not an employer mention.
+
 ## What I assumed (full list in ASSUMPTIONS.md)
 
 1. ResumeAutomator was unreachable (local to your machine), so voice came from your
