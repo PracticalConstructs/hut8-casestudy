@@ -438,13 +438,13 @@ footer p{font-size:15px;color:var(--ink-2)}
     <p class="lede">No dollar here is mysteriously earned. Every savings line ties to construction cost, change orders, third party fees, or the CAPEX line every owner operator watches. I anchored every figure to Hut 8's public scale and kept it deliberately conservative.</p>
 
     <div class="tiles">
-      <div class="tile"><div class="v"><em>$350K</em></div><div class="l">Year one ask, all in: me, licensing, cloud, tokens</div></div><div class="tile"><div class="v">$4.0M</div><div class="l">Year one savings, kept deliberately conservative, math shown below</div></div><div class="tile"><div class="v">11x</div><div class="l">Year one return at the conservative number</div></div><div class="tile"><div class="v">$10M</div><div class="l">Year two savings as coverage widens, still conservative</div></div>
+      <div class="tile"><div class="v"><em>$450K</em></div><div class="l">Year one ask, all in: me at $350K, plus licensing, cloud, and tokens</div></div><div class="tile"><div class="v">$4.0M</div><div class="l">Year one savings, kept deliberately conservative, math shown below</div></div><div class="tile"><div class="v">9x</div><div class="l">Year one return at the conservative number</div></div><div class="tile"><div class="v">$10M</div><div class="l">Year two savings as coverage widens, still conservative</div></div>
     </div>
 
     <div class="money-grid">
       <div>
         <table class="money-table" aria-label="Cost and value model">
-          <thead><tr><th>Line</th><th style="text-align:right">Year 1</th><th style="text-align:right">Year 2</th></tr></thead><tbody><tr class="sec"><td colspan="3">What it costs</td></tr><tr><td>Me, all in</td><td class="num">$250K</td><td class="num">$350K</td></tr><tr><td>Engineers two and three ($260K each)</td><td class="num">$0</td><td class="num">$520K</td></tr><tr><td>Licensing (ACC, APS)</td><td class="num">$45K</td><td class="num">$90K</td></tr><tr><td>Cloud and API tokens</td><td class="num">$55K</td><td class="num">$90K</td></tr><tr class="total"><td>Total cost</td><td class="num">$350K</td><td class="num">$1.05M</td></tr><tr class="sec"><td colspan="3">What it returns</td></tr><tr><td>Change orders avoided</td><td class="num">$2.4M</td><td class="num">$6.0M</td></tr><tr><td>Third party design fees eliminated</td><td class="num">$0.9M</td><td class="num">$1.8M</td></tr><tr><td>Schedule value captured</td><td class="num">$0.7M</td><td class="num">$2.2M</td></tr><tr class="total"><td>Total savings, conservative case</td><td class="num">$4.0M</td><td class="num">$10.0M</td></tr></tbody>
+          <thead><tr><th>Line</th><th style="text-align:right">Year 1</th><th style="text-align:right">Year 2</th></tr></thead><tbody><tr class="sec"><td colspan="3">What it costs</td></tr><tr><td>Me, all in</td><td class="num">$350K</td><td class="num">$450K</td></tr><tr><td>Engineers two and three ($260K each)</td><td class="num">$0</td><td class="num">$520K</td></tr><tr><td>Licensing (ACC, APS)</td><td class="num">$45K</td><td class="num">$90K</td></tr><tr><td>Cloud and API tokens</td><td class="num">$55K</td><td class="num">$90K</td></tr><tr class="total"><td>Total cost</td><td class="num">$450K</td><td class="num">$1.15M</td></tr><tr class="sec"><td colspan="3">What it returns</td></tr><tr><td>Change orders avoided</td><td class="num">$2.4M</td><td class="num">$6.0M</td></tr><tr><td>Third party design fees eliminated</td><td class="num">$0.9M</td><td class="num">$1.8M</td></tr><tr><td>Schedule value captured</td><td class="num">$0.7M</td><td class="num">$2.2M</td></tr><tr class="total"><td>Total savings, conservative case</td><td class="num">$4.0M</td><td class="num">$10.0M</td></tr></tbody>
         </table>
       </div>
       <div class="viz-root" id="money-chart-root">
@@ -4427,7 +4427,7 @@ three/build/three.module.js:
   var THREE = window.THREE;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var MONEY = {"chart":[{"label":"Year 1","cost":0.35,"savings":4},{"label":"Year 2","cost":1.05,"savings":10}]};
+  var MONEY = {"chart":[{"label":"Year 1","cost":0.45,"savings":4},{"label":"Year 2","cost":1.15,"savings":10}]};
 
   /* palette */
   var C = {
