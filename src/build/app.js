@@ -38,7 +38,9 @@
   window.addEventListener('hashchange', route);
   document.getElementById('btn-back').addEventListener('click', function () { location.hash = ''; });
   document.getElementById('btn-back-sum').addEventListener('click', function () { location.hash = ''; });
-  route();
+  /* NOTE: the initial route() call happens at the very END of this file.
+     Landing directly on #demo (a reload, or the PDF's demo link) must not
+     initialize the demo before the site data and GL helpers below exist. */
 
   /* ============================================================
      GL HELPERS
@@ -1240,4 +1242,7 @@
     }, { threshold: 0.4 });
     tiles.forEach(function (t) { io.observe(t); });
   }
+
+  /* initial route, now that every definition above exists */
+  route();
 })();
