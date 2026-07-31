@@ -28,6 +28,9 @@ template = must(template, '<title>Yurt 8: A Case Study for Hut 8</title>',
   '<title>Practical BIM: Digital Delivery for Owner Operators</title>');
 template = must(template, '<meta name="description" content="Yurt 8: one system that watches every project, generates the next design move, and learns from both. A case study for Hut 8 by Andres Felipe Pena.">',
   '<meta name="description" content="Practical BIM: one system that watches every project, generates the next design move, and learns from both. A working concept for owner operators by Andres Felipe Pena.">');
+/* the "8" tab icon is a Hut 8 tie; use the portfolio favicon instead */
+template = must(template, `<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f9552f'/%3E%3Ctext x='32' y='47' font-family='Arial,sans-serif' font-size='42' font-weight='700' fill='%23fff' text-anchor='middle'%3E8%3C/text%3E%3C/svg%3E">`,
+  '<link rel="icon" type="image/png" href="assets/favicon.png">');
 template = must(template, '{{FONTS_CSS}}', fontsCss);
 
 /* hero */
@@ -147,6 +150,10 @@ app = must(app, "var parts = ['HUT8', a.site, zone];", "var parts = ['PBIM', a.s
 app = must(app, "asset: site.id === 'beacon' ? 'CAB-BP1-POD2' : 'CAB-VG3-POD1',",
   "asset: site.id === 'beacon' ? 'CAB-DC2-POD2' : 'CAB-DC1-POD1',");
 
+/* internal ids: no Hut 8 site names anywhere, not even in view-source */
+app = app.split("'vega'").join("'dc1'");
+app = app.split("'beacon'").join("'dc2'");
+
 /* tutorial + misc copy */
 app = must(app, "title: 'Welcome to Yurt 8', text: 'This is the live demo of the tool.",
   "title: 'Welcome to Practical BIM', text: 'This is the live demo of the tool.");
@@ -170,8 +177,8 @@ const leftovers = html.match(/\{\{[A-Z_]+\}\}/g);
 if (leftovers) { console.error('FATAL tokens:', leftovers); process.exit(1); }
 const authored = [template, app].join('\n');
 if (/[–—]/.test(authored)) { console.error('FATAL: dash in authored content'); process.exit(1); }
-const forbidden = /hut\s?8|yurt|vega|beacon\s?point|\bDSX\b|fluidstack|genoot|26\.6|830 MW|9\.8B|19\.6B|SEC filing|10-K|case study|proposal/i;
-const lines = authored.split('\n').map((l, i) => [i + 1, l]).filter(([i, l]) => forbidden.test(l) && !/'vega'|'beacon'|#site-vega|#site-beacon|site-vega|site-beacon/.test(l));
+const forbidden = /hut\s?8|yurt|vega|beacon|\bDSX\b|fluidstack|genoot|26\.6|830 MW|9\.8B|19\.6B|SEC filing|10-K|case study|proposal/i;
+const lines = authored.split('\n').map((l, i) => [i + 1, l]).filter(([i, l]) => forbidden.test(l));
 if (lines.length) {
   console.error('FATAL: forbidden terms remain:');
   lines.slice(0, 12).forEach(([i, l]) => console.error('  ' + i + ': ' + l.trim().slice(0, 130)));
