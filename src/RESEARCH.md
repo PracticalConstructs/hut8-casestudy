@@ -57,30 +57,45 @@ Bitcoin).
   reference architecture. OpenUSD Core Spec 1.0 shipped Dec 17, 2025.
 - Procore REST API: OAuth 2.0, 3,600 requests/hour per token, free sandbox.
 
-## The savings model math (kept deliberately conservative)
+## The savings model math (synthesis agent output, adopted)
 
-Hut 8 has 830 MW under construction at a guided $9M to $11M per MW: roughly $7.5B to
-$9B of construction value in flight, consistent with the $7.5B of project bonds closed
-in 2026. Benchmarks above say 3 to 5% of construction budget is lost to A/E error
-driven change orders alone, and BIM driven clash detection has documented savings up
-to 10% of contract value. Yurt 8 claims a fraction of a percent:
+Scale anchor, two ways that agree:
+- 830 MW under construction x $9M to $11M per MW guided = $7.5B to $9.1B (midpoint
+  ~$8.3B).
+- Project bonds actually closed in 2026 = $7.5B ($3.25B River Bend + $4.25B Beacon
+  Point) at up to 85% loan to cost, implying a program of $8.8B or more.
+Delivery is compressed into the plan window: Beacon Point energization Q1 2027, first
+halls at both campuses through 2027, so most of this spend flows during years 1 and 2.
 
-**Year 1 (ask: $350K all in)**
-- Review watches roughly $400M of active construction value (a conservative slice of
-  one campus while the tool stands up).
-- Change orders and rework avoided: 0.75% of watched value = $3.0M (vs the 3 to 5%
-  benchmark exposure; capture assumption is 15 to 25% of addressable).
-- Third party design fees eliminated (test fits, sizing, non wet seal work): $0.6M.
-- Schedule value from faster RFI resolution and early clash surfacing: $0.4M.
-- **Total year 1 base case: $4.0M, about 11x the ask.**
+Honesty adjustment baked in: Jacobs is EPCM lead at River Bend and Hut 8 runs a
+partnership driven model with Tier 1 partners who already use BIM. Yurt 8 is an owner
+side overlay arriving mid flight, so capture rates claim only a single digit to mid
+teens share of the benchmark defect pool, never the full CIFE ceiling.
 
-**Year 2 (cost: ~$1.05M with 3 headcount)**
-- Coverage grows to roughly $1.5B to $2B as River Bend and Beacon Point halls deliver
-  through 2027 (both first halls land inside year 2 of this plan).
-- Same capture logic at 0.5% of watched value = $8.0M, plus $1.0M fees, plus $1.0M
-  schedule value.
-- **Total year 2 base case: $10.0M, about 10x cost.**
+Three savings components:
+- **A. Change order / rework avoidance.** Pool: 3 to 5% of construction budget from
+  A/E errors (AIA); ~5 to 9% rework (Navigant/CII). Conservative $2.1B touched x 3%
+  pool x 3% capture = $1.9M. Base $3.3B x 4% x 8% = $10.6M. Upside $4.6B x 5% x 15% =
+  $34.5M.
+- **B. Design fee reduction via templated reference design.** Next campus design fees
+  ~$22.5M in year 1 at the 2.5% large project rate; reuse captures $0 conservative,
+  $2.3M base, $5.6M upside. (Hut 8's own DSX redesign, +57% capacity in the same
+  footprint, proves design iteration value internally.)
+- **C. Schedule value as interest carry, not phantom revenue.** $7.5B of notes at
+  ~6.16% blended = about $1.27M per day at full draw. Base: 5 protected days on
+  average draw = $3.2M. Upside adds NOI pull forward on an early data hall.
 
-Conservative / base / upside at year 2 scale: $6M / $10M / $20M+ (upside only requires
-capturing ~1% of watched construction value, still one tenth of the CIFE documented
-ceiling).
+| Case | Year 1 | Year 2 |
+|---|---|---|
+| Conservative | ~$2.2M | ~$5.5M |
+| Base | ~$16M | ~$39M |
+| Upside | ~$57M | ~$130M |
+| **Pitched in deliverables** | **$4.0M** | **$10.0M** |
+
+Verdict adopted in the deliverables: the $4M / $10M claims sit between conservative
+and base, so they are pitched as the conservative case with the base math shown
+($8M to $16M year 1 on the same benchmarks). ROI at the $2.2M floor is still ~6x the
+$350K ask; the DBIA precedent ($200K VDC spend returning $2.5M+) independently
+supports the floor. Caveats carried into the copy: Tier 1 partners already run BIM
+(owner side residual only); some savings accrue inside non recourse project SPVs;
+schedule value is carry avoidance and risk reduction.

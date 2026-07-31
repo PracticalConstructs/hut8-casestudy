@@ -35,9 +35,13 @@ anything here you want changed and I will rebuild around it.
    this build. Each figure in the cost model is traceable in src/RESEARCH.md with
    source URLs. Where a range existed I used the conservative end.
 7. **Cost/value model calibration.** Your rough figures (~$350K year 1 ask, ~$4M year 1
-   savings, ~$10M year 2) were treated as targets to validate against Hut 8's real
-   CAPEX scale, not as fixed claims. The shipped numbers are the ones the public data
-   supports; the math is shown in the deliverables and in src/RESEARCH.md.
+   savings, ~$10M year 2) were validated against Hut 8's real scale and survived
+   easily: at 830 MW under construction ($8B in flight), the base case math on
+   standard benchmarks lands at $8M to $16M for year one. I kept YOUR numbers as the
+   headline and framed them as the conservative case, with the base math shown in the
+   copy. Full three case model (conservative $2.2M / base $16M / upside $57M year one)
+   in src/RESEARCH.md. If you would rather headline the base case, that is a copy
+   swap, not a rebuild.
 8. **Tracker stages.** Locked as specified: Site Selection, Preconstruction, Design,
    Construction, Procurement, Fit-out, Operations. Critical elements per stage locked
    as specified, plus proposed additions flagged in the deliverable (Cost Management,

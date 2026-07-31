@@ -232,7 +232,7 @@
 
     /* rack rows (instanced) */
     var rackGeo = new THREE.BoxGeometry(0.9, 2.1, 1.1);
-    var rackMat = new THREE.MeshStandardMaterial({ color: DARKPANEL, roughness: 0.55, metalness: 0.35 });
+    var rackMat = new THREE.MeshStandardMaterial({ color: 0x2a3247, roughness: 0.5, metalness: 0.35 });
     var faceGeo = new THREE.PlaneGeometry(0.78, 1.9);
     var rows = 4, per = 16;
     var rackCount = rows * per;
@@ -562,7 +562,7 @@
       var yc = y(d.cost), ys = y(d.savings);
       var hc = Math.max(3, padT + ih - yc), hs = Math.max(3, padT + ih - ys);
       svg.push('<path class="bar" data-tip="' + d.label + ' program cost: $' + d.cost.toFixed(2) + 'M" d="' + roundTopBar(x1, padT + ih, barW, hc, 4) + '" fill="#c98500"/>');
-      svg.push('<path class="bar" data-tip="' + d.label + ' savings, base case: $' + d.savings.toFixed(1) + 'M" d="' + roundTopBar(x2, padT + ih, barW, hs, 4) + '" fill="#199e70"/>');
+      svg.push('<path class="bar" data-tip="' + d.label + ' savings, conservative case: $' + d.savings.toFixed(1) + 'M" d="' + roundTopBar(x2, padT + ih, barW, hs, 4) + '" fill="#199e70"/>');
       svg.push('<text x="' + (x1 + barW / 2) + '" y="' + (yc - 6) + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#e8ecf4">$' + (d.cost < 1 ? d.cost.toFixed(2) : d.cost.toFixed(1)) + 'M</text>');
       svg.push('<text x="' + (x2 + barW / 2) + '" y="' + (ys - 6) + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#e8ecf4">$' + d.savings.toFixed(1) + 'M</text>');
       svg.push('<text x="' + cx + '" y="' + (H - 10) + '" text-anchor="middle" font-size="12.5" fill="#9aa3b5">' + d.label + '</text>');
