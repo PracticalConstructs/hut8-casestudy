@@ -14,7 +14,14 @@ const fill = JSON.parse(fs.readFileSync(path.join(build, 'fill.json'), 'utf8'));
 
 app = app.replace('{{MONEY_JSON}}', JSON.stringify(fill.MONEY_JSON));
 
+const fontsCss = [400, 500, 700].map(w => {
+  const b64 = fs.readFileSync(path.join(build, 'node_modules', '@fontsource', 'space-grotesk', 'files',
+    `space-grotesk-latin-${w}-normal.woff2`)).toString('base64');
+  return `@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:${w};font-display:swap;src:url(data:font/woff2;base64,${b64}) format("woff2")}`;
+}).join('\n');
+
 let html = template
+  .replace('{{FONTS_CSS}}', () => fontsCss)
   .replace('{{HUT8_TILES}}', fill.HUT8_TILES)
   .replace('{{HUT8_TILES_SOURCES}}', fill.HUT8_TILES_SOURCES)
   .replace('{{MONEY_TILES}}', fill.MONEY_TILES)

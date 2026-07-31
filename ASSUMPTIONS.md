@@ -3,6 +3,31 @@
 Every open question I hit while building, with the default I chose and why. Flag
 anything here you want changed and I will rebuild around it.
 
+## Iteration 2 (your review edits, July 31)
+
+A. **ResumeAutomator1 is empty.** github.com/PracticalConstructs/ResumeAutomator1
+   exists but has zero commits and zero branches; the push from your machine did not
+   land. Voice still comes from andres-portfolio plus the way you write in your own
+   review notes. Push the repo content and I will re-read it and do another pass.
+B. **hut8.com and dsrny.com are bot-blocked from this build environment.** I worked
+   from strong knowledge of both: Hut 8's rebrand (near black, big confident type,
+   green accent, technical micro labels) and DS+R's editorial restraint (one type
+   family, hairlines, whitespace). Space Grotesk is embedded for headings.
+C. **Landing page keeps a condensed story below the fold.** You asked for landing =
+   hero plus two buttons; the loop, Hut 8 fit, plan, money, and homework sections
+   still need to live somewhere for the case study to stand alone, so they sit below
+   the hero in a much quieter editorial layout. Cut them entirely if you want a pure
+   two screen experience.
+D. **Real manufacturers are named illustratively.** Vertiv and Rittal cabinets,
+   NVIDIA H100 and GB200 GPU generations, Voith and Andritz generators. Public
+   brands, no claims made about them beyond what the demo shows.
+E. **Demo data is labeled.** Clash feeds, RFI counts, and sensor numbers are sample
+   data and each site panel says so; financial figures per site are public (Vega,
+   Beacon Point). The hydro station is explicitly a concept example.
+F. **The pizza tracker lives in the demo now** (pinned to Fit-out per your spec),
+   with the seven disciplines as the bottom icon ribbon. The landing page mentions
+   both but no longer duplicates the full interactive tracker.
+
 ## Process and environment
 
 1. **Phase 1 interview did not happen.** This session runs in a remote container where
