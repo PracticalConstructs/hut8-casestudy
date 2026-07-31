@@ -3,386 +3,322 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Yurt 8: A Case Study in Digital Delivery for Hut 8</title>
-<meta name="description" content="Yurt 8: one system that watches every project, generates the next design move, and learns from both. A case study for the Hut 8 portfolio by Andres Felipe Pena.">
+<title>Yurt 8: A Case Study for Hut 8</title>
+<meta name="description" content="Yurt 8: one system that watches every project, generates the next design move, and learns from both. A case study for Hut 8 by Andres Felipe Pena.">
 <style>
+{{FONTS_CSS}}
 :root{
-  --bg:#0b0e14; --panel:#12161f; --panel-2:#171c28; --line:#232a3a;
-  --ink:#e8ecf4; --ink-2:#9aa3b5; --ink-3:#6b7488;
-  --amber:#f0a028; --amber-dim:#c98500; --cyan:#35c3d4; --cyan-dim:#199e70;
-  --s1:#c98500; --s2:#199e70; --s3:#3987e5;
-  --good:#0ca30c;
+  --bg:#0a0f0b; --bg-2:#0d130e; --panel:#101712; --panel-2:#151d16; --line:#22301f;
+  --line-soft:#1a2519;
+  --ink:#edf3ea; --ink-2:#a8b8a4; --ink-3:#71816e;
+  --leaf:#8fbe6e; --fern:#69a35e; --mint:#cde8cf; --moss:#44705d;
+  --blossom:#e8b4c8; --rose:#e15b78; --violet:#9085e9;
+  --sky:#a8d8ea; --sky-deep:#7fc8e0;
+  --s1:#3987e5; --s2:#199e70;
   --radius:14px;
+  --font-head:"Space Grotesk",system-ui,sans-serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{
   background:var(--bg); color:var(--ink);
-  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
-  line-height:1.6; font-size:17px;
+  font-family:var(--font-body);
+  line-height:1.65; font-size:16.5px;
   -webkit-font-smoothing:antialiased;
 }
-a{color:var(--cyan);text-decoration:none}
+a{color:var(--sky);text-decoration:none}
 a:hover{text-decoration:underline}
-.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
-section{padding:72px 0;border-top:1px solid var(--line)}
-h1,h2,h3{line-height:1.2;font-weight:700}
-h2{font-size:clamp(26px,3.6vw,34px);margin-bottom:10px}
-h3{font-size:19px;margin-bottom:8px}
-.kicker{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:10px}
-.lede{font-size:clamp(17px,2vw,19px);color:var(--ink-2);max-width:760px}
-p{max-width:760px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+section{padding:96px 0;border-top:1px solid var(--line-soft)}
+h1,h2,h3{font-family:var(--font-head);line-height:1.15;font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(28px,4vw,42px);margin-bottom:14px;font-weight:500}
+h3{font-size:19px;margin-bottom:8px;font-weight:500}
+.kicker{font-family:var(--font-head);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--leaf);font-weight:500;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.kicker::after{content:"";height:1px;background:var(--line);flex:0 0 56px}
+.lede{font-size:clamp(16.5px,1.9vw,18.5px);color:var(--ink-2);max-width:720px}
+p{max-width:720px}
 .muted{color:var(--ink-2)}
-.small{font-size:14px;color:var(--ink-3)}
+.small{font-size:13.5px;color:var(--ink-3)}
 button{font:inherit;cursor:pointer}
+.view{display:none}
+.view.active{display:block}
 
-/* ---------- hero ---------- */
-#hero{position:relative;min-height:92vh;display:flex;align-items:center;border-top:none;overflow:hidden;padding:0}
+/* ---------- landing hero ---------- */
+#hero{position:relative;min-height:100vh;display:flex;align-items:center;border-top:none;overflow:hidden;padding:0}
 #hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(11,14,20,.94) 0%,rgba(11,14,20,.72) 34%,rgba(11,14,20,.22) 58%,rgba(11,14,20,0) 75%)}
-.hero-inner{position:relative;z-index:2;padding:96px 24px;max-width:1060px;margin:0 auto;width:100%}
-.hero-badge{display:inline-block;border:1px solid var(--line);background:rgba(18,22,31,.75);backdrop-filter:blur(6px);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--ink-2);margin-bottom:18px}
-#hero h1{font-size:clamp(48px,9vw,104px);letter-spacing:-.02em}
-#hero h1 .eight{color:var(--amber)}
-.hero-sub{font-size:clamp(18px,2.4vw,23px);color:var(--ink-2);max-width:640px;margin:14px 0 8px}
-.hero-by{font-size:15px;color:var(--ink-3);margin-bottom:26px}
-.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
-.btn{display:inline-block;border-radius:10px;padding:12px 20px;font-weight:600;font-size:15px;border:1px solid var(--line)}
-.btn-primary{background:var(--amber);color:#141005;border-color:var(--amber)}
-.btn-primary:hover{background:#ffb545;text-decoration:none}
-.btn-ghost{background:rgba(18,22,31,.75);color:var(--ink)}
-.btn-ghost:hover{border-color:var(--amber);text-decoration:none}
-.hero-note{margin-top:22px;font-size:14px;color:var(--ink-3)}
-.scene-caption{position:absolute;right:20px;bottom:16px;z-index:2;font-size:12px;color:var(--ink-3);background:rgba(11,14,20,.6);padding:4px 10px;border-radius:8px}
+#hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(10,15,11,.94) 0%,rgba(10,15,11,.7) 36%,rgba(10,15,11,.18) 60%,rgba(10,15,11,0) 78%)}
+.hero-inner{position:relative;z-index:2;padding:96px 28px;max-width:1080px;margin:0 auto;width:100%}
+#hero h1{font-size:clamp(56px,10vw,120px);letter-spacing:-.03em;font-weight:700}
+#hero h1 .eight{color:var(--leaf)}
+.hero-badge{display:inline-block;border:1px solid var(--line);background:rgba(16,23,18,.7);backdrop-filter:blur(6px);border-radius:999px;padding:7px 16px;font-size:13px;letter-spacing:.06em;color:var(--ink-2);margin:18px 0 22px}
+.hero-sub{font-size:clamp(17px,2.3vw,21px);color:var(--ink-2);max-width:560px;margin:0 0 10px}
+.hero-by{font-size:14.5px;color:var(--ink-3);margin-bottom:34px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;border-radius:12px;padding:15px 26px;font-family:var(--font-head);font-weight:500;font-size:15.5px;letter-spacing:.01em;border:1px solid transparent;transition:transform .15s ease,filter .15s ease}
+.btn:hover{text-decoration:none;transform:translateY(-1px);filter:brightness(1.08)}
+.btn-sky{background:var(--sky);color:#0b1a20}
+.btn-leaf{background:var(--leaf);color:#101a0c}
+.scene-caption{position:absolute;right:22px;bottom:18px;z-index:2;font-size:12px;color:var(--ink-3);background:rgba(10,15,11,.55);padding:5px 12px;border-radius:8px}
 
-/* ---------- principles ---------- */
-.chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 8px}
-.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600}
-.chip b{color:var(--amber);font-weight:700}
+/* ---------- landing sections ---------- */
+.loop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:38px}
+.loop-card{background:var(--panel);padding:30px 28px}
+.loop-card .num{font-family:var(--font-head);font-size:12px;letter-spacing:.2em;color:var(--ink-3)}
+.loop-card h3{font-size:26px;margin:10px 0 12px;font-weight:500}
+.loop-card.review h3{color:var(--mint)}
+.loop-card.generate h3{color:var(--leaf)}
+.loop-card.learn h3{color:var(--sky)}
+.loop-card p{font-size:15px;color:var(--ink-2);margin-bottom:12px}
+.loop-card ul{list-style:none}
+.loop-card li{font-size:14.5px;color:var(--ink-2);padding:4px 0 4px 18px;position:relative}
+.loop-card li::before{content:"";position:absolute;left:0;top:13px;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5}
+.schema-line{margin-top:26px;border-left:2px solid var(--leaf);padding:6px 0 6px 20px;max-width:760px}
+.schema-line p{font-size:15.5px;color:var(--ink-2)}
+.schema-line code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;color:var(--mint)}
 
-/* ---------- tracker ---------- */
-.tracker-shell{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px 22px 20px;margin-top:30px}
-.tracker-bar{display:flex;align-items:flex-start;position:relative;margin:8px 0 4px}
-.tracker-bar::before{content:"";position:absolute;top:17px;left:calc(100%/14);right:calc(100%/14);height:4px;background:var(--line);border-radius:2px}
-#tracker-fill{position:absolute;top:17px;left:calc(100%/14);height:4px;background:linear-gradient(90deg,var(--amber),var(--cyan));border-radius:2px;width:0;transition:width .7s ease}
-.t-stage{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;background:none;border:none;color:var(--ink-2);position:relative;padding:0 2px}
-.t-dot{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--ink-3);transition:all .25s;position:relative;z-index:1}
-.t-stage.done .t-dot{border-color:var(--amber);color:var(--amber)}
-.t-stage.active .t-dot{border-color:var(--cyan);color:#08343a;background:var(--cyan);box-shadow:0 0 18px rgba(53,195,212,.45)}
-.t-label{font-size:12.5px;font-weight:600;text-align:center;line-height:1.25}
-.t-stage.active .t-label{color:var(--ink)}
-.t-stage:hover .t-dot{border-color:var(--cyan)}
-.t-stage:focus-visible{outline:2px solid var(--cyan);outline-offset:4px;border-radius:8px}
-.tracker-detail{margin-top:22px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:22px}
-.tracker-detail h3{color:var(--amber)}
-.td-cols{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;margin-top:10px}
-.td-cols h4{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
-.td-cols ul{list-style:none}
-.td-cols li{padding:4px 0 4px 20px;position:relative;font-size:15px;color:var(--ink-2)}
-.td-cols li::before{content:"";position:absolute;left:2px;top:12px;width:7px;height:7px;border-radius:2px;background:var(--cyan)}
-.rails{margin-top:26px}
-.rails-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
-.rail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.rail b{display:block;font-size:15px;margin-bottom:3px}
-.rail span{font-size:13.5px;color:var(--ink-2)}
-.rail.flagged{border-style:dashed;border-color:#3a4356}
-.rail.flagged b::after{content:" ·  flagged for review";color:var(--amber);font-size:11.5px;font-weight:600;letter-spacing:.04em}
+.filters{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;font-family:var(--font-head)}
+.filters span{font-size:15px;color:var(--ink-2)}
+.filters b{color:var(--leaf);font-weight:500;margin-right:8px}
 
-/* ---------- loop ---------- */
-.loop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
-.loop-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;position:relative}
-.loop-card .num{font-size:12px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;font-weight:700}
-.loop-card h3{font-size:24px;margin:6px 0 10px}
-.loop-card.review h3{color:var(--amber)}
-.loop-card.generate h3{color:var(--cyan)}
-.loop-card.learn h3{color:#8fd694}
-.loop-card p{font-size:15px;color:var(--ink-2);margin-bottom:10px}
-.loop-card ul{list-style:none;margin-top:4px}
-.loop-card li{font-size:14.5px;color:var(--ink-2);padding:3px 0 3px 18px;position:relative}
-.loop-card li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55}
-.schema-shell{margin-top:26px;background:#0d1117;border:1px solid var(--line);border-radius:var(--radius);padding:22px}
-.schema-shell h3{color:var(--ink)}
-pre.json{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.55;color:#c9d4e6;overflow-x:auto;margin-top:12px;background:#0b0f16;border:1px solid var(--line);border-radius:10px;padding:16px}
-pre.json .k{color:#79b8ff}
-pre.json .s{color:#ffd587}
-pre.json .n{color:#7ce38b}
-
-/* ---------- playground ---------- */
-.play-shell{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-top:30px;align-items:stretch}
-#play-canvas-wrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-height:420px}
-#play-canvas{width:100%;height:100%;display:block;min-height:420px}
-.play-side{display:flex;flex-direction:column;gap:12px}
-.play-btns{display:flex;flex-direction:column;gap:10px}
-.play-btn{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--ink);transition:border-color .2s}
-.play-btn:hover{border-color:var(--cyan)}
-.play-btn b{display:block;font-size:15px}
-.play-btn span{font-size:13px;color:var(--ink-2)}
-.play-btn.armed{border-color:var(--amber)}
-#play-json{flex:1;background:#0b0f16;border:1px solid var(--line);border-radius:12px;padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;color:#9fb3d1;overflow:auto;max-height:240px;white-space:pre}
-.canvas-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--ink-2);font-size:15px}
-
-/* ---------- hut8 ---------- */
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:28px 0 10px}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
-.tile .v{font-size:clamp(28px,3.4vw,38px);font-weight:700;letter-spacing:-.01em}
-.tile .v em{font-style:normal;color:var(--amber)}
-.tile .l{font-size:14px;color:var(--ink-2);margin-top:4px}
-.tile .src{font-size:12px;color:var(--ink-3);margin-top:8px}
-.paths{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
-.path-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
-.path-card h3{color:var(--cyan)}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:34px 0 12px}
+.tile{background:var(--panel);padding:26px 24px}
+.tile .v{font-family:var(--font-head);font-size:clamp(30px,3.6vw,42px);font-weight:500;letter-spacing:-.02em}
+.tile .v em{font-style:normal;color:var(--leaf)}
+.tile .l{font-size:13.5px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px}
+.path-card h3{color:var(--mint);font-weight:500}
 .path-card p{font-size:15px;color:var(--ink-2)}
 
-/* ---------- underneath ---------- */
-.under-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
-.under-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
-.under-card h3{color:var(--amber);font-size:17px}
-.under-card p{font-size:15px;color:var(--ink-2);margin-bottom:8px}
-.under-card ul{list-style:none}
-.under-card li{font-size:14.5px;color:var(--ink-2);padding:3px 0 3px 18px;position:relative}
-.under-card li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--cyan);opacity:.6}
-pre.tree{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:#c9d4e6;background:#0b0f16;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:10px;overflow-x:auto}
-pre.tree .c{color:var(--ink-3)}
-
-/* ---------- roadmap ---------- */
-.road{margin-top:34px;position:relative;padding-left:34px}
-.road::before{content:"";position:absolute;left:10px;top:6px;bottom:6px;width:3px;background:var(--line);border-radius:2px}
-.mile{position:relative;padding:0 0 30px}
-.mile::before{content:"";position:absolute;left:-30px;top:7px;width:15px;height:15px;border-radius:50%;background:var(--bg);border:3px solid var(--amber)}
-.mile.team::before{border-color:var(--cyan)}
-.mile .when{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);font-weight:700}
-.mile.team .when{color:var(--cyan)}
-.mile h3{margin:4px 0 6px}
+/* roadmap */
+.road{margin-top:40px;position:relative;padding-left:34px}
+.road::before{content:"";position:absolute;left:10px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.mile{position:relative;padding:0 0 34px}
+.mile::before{content:"";position:absolute;left:-29px;top:7px;width:13px;height:13px;border-radius:50%;background:var(--bg);border:2.5px solid var(--leaf)}
+.mile.team::before{border-color:var(--sky)}
+.mile .when{font-family:var(--font-head);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--leaf);font-weight:500}
+.mile.team .when{color:var(--sky)}
+.mile h3{margin:6px 0 6px;font-weight:500}
 .mile p{font-size:15px;color:var(--ink-2)}
-.mile .check{margin-top:8px;font-size:14px;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--good);border-radius:8px;padding:8px 12px;max-width:640px}
-.mile .check b{color:var(--ink)}
-.callout{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:18px 20px;margin-top:24px;max-width:760px}
-.callout p{font-size:15.5px}
+.mile .check{margin-top:10px;font-size:14px;color:var(--ink-2);border-left:2px solid var(--fern);padding:2px 0 2px 14px;max-width:620px}
+.mile .check b{color:var(--mint);font-weight:600}
+.callout{border-left:2px solid var(--leaf);padding:6px 0 6px 22px;margin-top:30px;max-width:720px}
+.callout p{font-size:15.5px;color:var(--ink-2)}
+.callout b{color:var(--ink)}
 
-/* ---------- money ---------- */
-.money-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;margin-top:30px;align-items:start}
-.viz-root{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;
-  --surface-1:#12161f;--text-primary:#e8ecf4;--text-secondary:#9aa3b5;--text-muted:#6b7488;
-  --grid:#232a3a;--series-1:#c98500;--series-2:#199e70}
-.viz-title{font-size:16px;font-weight:700}
+/* money */
+.money-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;margin-top:36px;align-items:start}
+.viz-root{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;
+  --surface-1:#101712;--text-primary:#edf3ea;--text-secondary:#a8b8a4;--grid:#22301f;--series-1:#3987e5;--series-2:#199e70}
+.viz-title{font-family:var(--font-head);font-size:16px;font-weight:500}
 .viz-sub{font-size:13px;color:var(--text-secondary);margin-bottom:14px}
 .legend{display:flex;gap:18px;margin:6px 0 12px;font-size:13px;color:var(--text-secondary)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
 .money-table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:6px}
-.money-table th{text-align:left;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:8px 10px;border-bottom:1px solid var(--line)}
-.money-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.money-table th{text-align:left;font-family:var(--font-head);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:9px 10px;border-bottom:1px solid var(--line)}
+.money-table td{padding:9px 10px;border-bottom:1px solid var(--line-soft);color:var(--ink-2)}
 .money-table td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
-.money-table tr.total td{color:var(--ink);font-weight:700;border-top:2px solid var(--line)}
-.money-table .sec{background:var(--panel-2);font-weight:700;color:var(--ink)}
-.foot-src{font-size:12.5px;color:var(--ink-3);margin-top:14px;max-width:760px}
-#chart-tip{position:fixed;z-index:50;background:#0d1117;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--ink);pointer-events:none;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.money-table tr.total td{color:var(--ink);font-weight:600;border-top:1px solid var(--line)}
+.money-table .sec td{font-family:var(--font-head);font-weight:500;color:var(--mint);font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding-top:16px}
+.foot-src{font-size:13px;color:var(--ink-3);margin-top:16px;max-width:760px;line-height:1.6}
+#chart-tip{position:fixed;z-index:50;background:#0d130e;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--ink);pointer-events:none;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
 
-/* ---------- homework ---------- */
-.hw-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
-.hw-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
-.hw-card h3{color:var(--cyan);font-size:17px}
+/* homework */
+.hw-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:36px}
+.hw-card{background:var(--panel);padding:28px}
+.hw-card h3{color:var(--mint);font-size:17px;font-weight:500}
 .hw-card p{font-size:15px;color:var(--ink-2);margin-bottom:8px}
-details.prompt-box{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-details.prompt-box summary{cursor:pointer;padding:18px 22px;font-weight:700;font-size:16px;list-style:none}
+details.prompt-box{margin-top:30px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+details.prompt-box summary{cursor:pointer;padding:20px 24px;font-family:var(--font-head);font-weight:500;font-size:16px;list-style:none}
 details.prompt-box summary::-webkit-details-marker{display:none}
-details.prompt-box summary::after{content:"+";float:right;color:var(--amber);font-size:20px}
+details.prompt-box summary::after{content:"+";float:right;color:var(--leaf);font-size:20px}
 details.prompt-box[open] summary::after{content:"x"}
-.prompt-body{padding:0 22px 22px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:#b8c4d8;white-space:pre-wrap}
+.prompt-body{padding:0 24px 24px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.6;color:#b7c4b3;white-space:pre-wrap}
 
-/* ---------- footer ---------- */
-footer{border-top:1px solid var(--line);padding:56px 0 72px}
-.foot-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px}
-footer h3{margin-bottom:8px}
+footer{border-top:1px solid var(--line-soft);padding:64px 0 80px}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:26px}
+footer h3{margin-bottom:10px;font-weight:500}
 footer p{font-size:15px;color:var(--ink-2)}
 .foot-links{list-style:none;font-size:15px}
-.foot-links li{padding:3px 0}
+.foot-links li{padding:4px 0}
 
+/* ============================================================
+   DEMO VIEW
+   ============================================================ */
+#view-demo{position:fixed;inset:0;background:var(--bg);z-index:10;display:none;flex-direction:column}
+#view-demo.active{display:flex}
+
+.demo-top{flex:0 0 auto;display:flex;align-items:center;gap:18px;padding:10px 16px;border-bottom:1px solid var(--line-soft);background:var(--bg-2)}
+.demo-logo{font-family:var(--font-head);font-weight:700;font-size:18px;letter-spacing:-.02em;color:var(--ink);background:none;border:none;padding:6px 10px;border-radius:8px}
+.demo-logo .eight{color:var(--leaf)}
+.demo-logo:hover{background:var(--panel-2)}
+.demo-logo span.back{font-size:11px;color:var(--ink-3);display:block;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.mini-tracker{flex:1;display:flex;align-items:center;position:relative;max-width:900px;margin:0 auto}
+.mini-tracker::before{content:"";position:absolute;top:10px;left:4%;right:4%;height:3px;background:var(--line);border-radius:2px}
+#mini-fill{position:absolute;top:10px;left:4%;height:3px;background:linear-gradient(90deg,var(--fern),var(--leaf));border-radius:2px}
+.mt-stage{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;color:var(--ink-3);padding:0 2px;cursor:default}
+.mt-dot{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);background:var(--bg);position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink-3)}
+.mt-stage.done .mt-dot{border-color:var(--fern);color:var(--fern)}
+.mt-stage.active .mt-dot{border-color:var(--leaf);background:var(--leaf);color:#101a0c;box-shadow:0 0 14px rgba(143,190,110,.5)}
+.mt-label{font-size:10.5px;font-weight:600;letter-spacing:.02em;text-align:center;line-height:1.2}
+.mt-stage.active .mt-label{color:var(--ink)}
+
+.demo-main{flex:1;display:grid;grid-template-columns:216px 1fr 292px;gap:10px;padding:10px;min-height:0}
+.demo-rail{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.rail-title{font-family:var(--font-head);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:500;margin-bottom:4px}
+.site-btn{text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 13px;color:var(--ink);transition:border-color .15s}
+.site-btn:hover{border-color:var(--fern)}
+.site-btn.active{border-color:var(--leaf);background:#17231a}
+.site-btn b{display:block;font-family:var(--font-head);font-weight:500;font-size:14px}
+.site-btn span{font-size:11.5px;color:var(--ink-2)}
+.site-btn .tag{display:inline-block;margin-top:5px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--leaf);border:1px solid var(--moss);border-radius:999px;padding:1px 8px}
+.rail-actions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.act-btn{text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);transition:border-color .15s}
+.act-btn:hover{border-color:var(--leaf)}
+.act-btn b{display:block;font-size:13px;font-weight:600}
+.act-btn span{font-size:11px;color:var(--ink-2);line-height:1.35;display:block}
+.act-btn.armed{border-color:var(--leaf)}
+
+#demo-stage{position:relative;background:#0b110c;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-height:0}
+#demo-canvas{width:100%;height:100%;display:block}
+.orbit-legend{position:absolute;top:12px;left:12px;background:rgba(10,15,11,.72);backdrop-filter:blur(4px);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:11.5px;color:var(--ink-2);line-height:1.6}
+.orbit-legend b{color:var(--mint);font-weight:600}
+.mep-legend{position:absolute;bottom:12px;left:12px;background:rgba(10,15,11,.72);backdrop-filter:blur(4px);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:11.5px;color:var(--ink-2)}
+.mep-legend .lt{font-family:var(--font-head);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+.mep-legend div.row{display:flex;align-items:center;gap:8px;padding:1.5px 0}
+.mep-legend i{display:inline-block;width:12px;height:5px;border-radius:2px}
+.site-title{position:absolute;top:12px;right:12px;text-align:right;background:rgba(10,15,11,.72);backdrop-filter:blur(4px);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+.site-title b{font-family:var(--font-head);font-weight:500;font-size:14px;display:block}
+.site-title span{font-size:11px;color:var(--ink-2)}
+.demo-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--ink-2);font-size:15px}
+
+.demo-data{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;overflow-y:auto}
+.dd-block{margin-bottom:18px}
+.dd-title{font-family:var(--font-head);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:500;margin-bottom:8px}
+.dd-stat{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+.dd-stat span{color:var(--ink-2)}
+.dd-stat b{color:var(--ink);font-weight:600;text-align:right;white-space:nowrap}
+.clash{border:1px solid var(--line);border-left:3px solid var(--rose);border-radius:8px;padding:9px 11px;margin-bottom:8px}
+.clash.res{border-left-color:var(--fern)}
+.clash p{font-size:12.5px;color:var(--ink-2);line-height:1.45}
+.clash .cost{font-size:12px;color:var(--mint);font-weight:600;margin-top:3px}
+.clash .st{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.clash .st.open{color:var(--rose)}
+.clash.res .st{color:var(--leaf)}
+#demo-json{background:#0b110c;border:1px solid var(--line);border-radius:10px;padding:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;line-height:1.5;color:#9fb59a;overflow:auto;max-height:180px;white-space:pre}
+
+.demo-ribbon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-top:1px solid var(--line-soft);background:var(--bg-2);position:relative}
+.rib-label{font-family:var(--font-head);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-right:10px}
+.rib-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:1px solid transparent;border-radius:10px;padding:6px 12px;color:var(--ink-2);transition:all .15s;min-width:76px}
+.rib-btn:hover{border-color:var(--line);color:var(--ink)}
+.rib-btn.active{border-color:var(--leaf);color:var(--mint);background:var(--panel-2)}
+.rib-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rib-btn span{font-size:10px;font-weight:600;letter-spacing:.02em;line-height:1.15;text-align:center}
+.rib-sheet{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:min(560px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;box-shadow:0 12px 40px rgba(0,0,0,.55);display:none}
+.rib-sheet.open{display:block}
+.rib-sheet h4{font-family:var(--font-head);font-weight:500;font-size:15px;color:var(--mint);margin-bottom:4px}
+.rib-sheet p{font-size:13.5px;color:var(--ink-2);line-height:1.55}
+.rib-burger{display:none}
+
+@media (max-width:1020px){
+  .demo-main{grid-template-columns:1fr;grid-template-rows:auto minmax(320px,1fr) auto}
+  .demo-rail{flex-direction:row;flex-wrap:wrap}
+  .rail-actions{margin-top:0;flex-direction:row;flex-wrap:wrap}
+  .demo-data{max-height:34vh}
+  .rib-btn span{display:none}
+  .rib-btn{min-width:44px}
+  .rib-burger{display:flex}
+  .mt-label{display:none}
+}
 @media (max-width:860px){
-  #hero::after{background:linear-gradient(180deg,rgba(11,14,20,.82) 0%,rgba(11,14,20,.66) 55%,rgba(11,14,20,.3) 100%)}
-  .loop-grid,.play-shell,.paths,.under-grid,.money-grid,.hw-grid,.foot-grid,.td-cols{grid-template-columns:1fr}
-  .t-label{font-size:10.5px}
-  .t-dot{width:28px;height:28px;font-size:11.5px}
-  .tracker-bar::before,#tracker-fill{top:14px}
-  section{padding:56px 0}
+  #hero::after{background:linear-gradient(180deg,rgba(10,15,11,.84) 0%,rgba(10,15,11,.65) 55%,rgba(10,15,11,.3) 100%)}
+  .loop-grid,.paths,.money-grid,.hw-grid,.foot-grid{grid-template-columns:1fr}
+  section{padding:64px 0}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  #tracker-fill{transition:none}
+  .btn:hover{transform:none}
 }
 </style>
 </head>
 <body>
 
-<!-- ================= HERO ================= -->
+<!-- ============================================================
+     VIEW 1: LANDING
+     ============================================================ -->
+<div id="view-landing" class="view active">
+
 <section id="hero" aria-label="Introduction">
   <canvas id="hero-canvas" aria-hidden="true"></canvas>
   <div class="hero-inner">
-    <span class="hero-badge">A case study for Hut 8</span>
     <h1>YURT <span class="eight">8</span></h1>
-    <p class="hero-sub">One system that watches every project, generates the next design move, and learns from both. Built so leadership sees dollars and time move every single month.</p>
+    <div><span class="hero-badge">A case study for Hut 8</span></div>
+    <p class="hero-sub">One system that watches every project, generates the next design move, and learns from both. Leadership sees dollars and days move every month.</p>
     <p class="hero-by">By Andres Felipe Pena · New York City</p>
     <div class="hero-cta">
-      <a class="btn btn-primary" href="Yurt8-Case-Study.pdf" download>Read the two page brochure</a>
-      <a class="btn btn-ghost" href="#tracker">Scroll the demo</a>
+      <a class="btn btn-sky" href="Yurt8-Case-Study.pdf" download>Read The Two Page Brochure</a>
+      <a class="btn btn-leaf" href="#demo" id="btn-demo">Demo the Tool</a>
     </div>
-    <p class="hero-note">This entire page is one file. It runs offline, in any modern browser, with nothing to install. That is not a gimmick. It is the point.</p>
   </div>
   <span class="scene-caption">Live 3D: a data hall assembling itself. Drag to orbit.</span>
 </section>
 
-<!-- ================= PRINCIPLES ================= -->
-<section id="principles" aria-label="First principles">
-  <div class="wrap">
-    <p class="kicker">The filter</p>
-    <h2>Five tests, applied to everything</h2>
-    <p class="lede">Every element on this page had to pass five tests or get cut. The same filter applies to every feature Yurt 8 will ever ship.</p>
-    <div class="chips">
-      <span class="chip"><b>1</b> Keep it simple</span>
-      <span class="chip"><b>2</b> Cut cost</span>
-      <span class="chip"><b>3</b> Cut time</span>
-      <span class="chip"><b>4</b> Raise quality</span>
-      <span class="chip"><b>5</b> Built to scale, never stagnant</span>
-    </div>
-    <p class="small" style="margin-top:14px">If a step does not directly advance one of these, it does not exist in this system.</p>
-  </div>
-</section>
-
-<!-- ================= TRACKER ================= -->
-<section id="tracker" aria-label="The tracker">
-  <div class="wrap">
-    <p class="kicker">The face of the system</p>
-    <h2>A pizza tracker for buildings</h2>
-    <p class="lede">Domino's earned trust with a tracker. You watch the pizza move and nobody has to call the store. Owners deserve that same view of their capital projects. In Yurt 8, every project lives on one chronological tracker, and every stage is wired directly to the data sources that matter for it. It is not a status slide somebody made on Friday. It is the live state of the work.</p>
-
-    <div class="tracker-shell">
-      <div class="tracker-bar" role="tablist" aria-label="Project stages">
-        <div id="tracker-fill"></div>
-        <!-- stages injected by JS -->
-      </div>
-      <div class="tracker-detail" id="tracker-detail" role="tabpanel">
-        <!-- detail injected by JS -->
-      </div>
-    </div>
-
-    <div class="rails">
-      <h3>Seven disciplines run under every stage</h3>
-      <p class="muted" style="font-size:15px;max-width:760px">These are not phases. They are rails that run the full length of the tracker, from the first land scan to year twenty of operations.</p>
-      <div class="rails-grid">
-        <div class="rail"><b>Clash Detection</b><span>Find the pipe hitting the beam on a screen, months before it costs real money in the field.</span></div>
-        <div class="rail"><b>BIM</b><span>Models that carry real information, not just pretty geometry.</span></div>
-        <div class="rail"><b>Information Management</b><span>The right file, the right version, the right person. Every time.</span></div>
-        <div class="rail"><b>Model Management</b><span>Live model health: who touched what, what changed, what broke.</span></div>
-        <div class="rail"><b>User Management</b><span>Internal people see everything they need. External vendors see exactly what they need and nothing else.</span></div>
-        <div class="rail"><b>Project Management</b><span>Scope, schedule, and risk in one place, in plain language.</span></div>
-        <div class="rail"><b>Project Delivery</b><span>The handoffs between design, construction, and operations, made boring on purpose.</span></div>
-        <div class="rail flagged"><b>Cost Management</b><span>Budget vs actuals live on the tracker, not in a monthly PDF.</span></div>
-        <div class="rail flagged"><b>Schedule Management</b><span>The schedule as data, so slips surface the day they happen.</span></div>
-        <div class="rail flagged"><b>Safety and QA/QC</b><span>Field checklists and inspections tied to the same asset IDs.</span></div>
-        <div class="rail flagged"><b>Commissioning and Handover</b><span>Operations gets a working digital asset on day one, not a box of PDFs.</span></div>
-        <div class="rail flagged"><b>Energy and Sustainability</b><span>Power and water telemetry feeding the same loop, because for a data center, energy is the business.</span></div>
-      </div>
-      <p class="small" style="margin-top:12px">The last five are additions I would make beyond the core seven. They are flagged here so you can push back before they cost anyone a dollar.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ================= LOOP ================= -->
 <section id="loop" aria-label="Review, Generate, Learn">
   <div class="wrap">
-    <p class="kicker">The engine</p>
+    <p class="kicker">01 · The engine</p>
     <h2>Review. Generate. Learn. Repeat.</h2>
-    <p class="lede">The tracker is the face. This loop is the engine behind it. Three moves that feed each other, speaking one shared language, getting a little smarter on every pass.</p>
+    <p class="lede">Three moves that feed each other, speaking one shared language, getting a little smarter on every pass. The demo above shows them working; here is what they are.</p>
 
     <div class="loop-grid">
       <div class="loop-card review">
-        <span class="num">01</span>
-        <h3>Review</h3>
-        <p>Real time visibility into everything already moving. No waiting for a meeting to find out.</p>
+        <span class="num">REVIEW</span>
+        <h3>See everything as it happens</h3>
         <ul>
-          <li>Live feeds of working Revit models and CAD files</li>
-          <li>Standardized spreadsheets showing the critical numbers</li>
+          <li>Live feeds of working Revit models, CAD files, and standardized spreadsheets</li>
           <li>RFIs, submittals, and financials translated into plain English for the owner</li>
-          <li>Clashes surfaced as they occur, not at the milestone review</li>
-          <li>Flags avoidable slowdowns and the design issues that become change orders</li>
-          <li>Predicts issues from patterns it has seen before</li>
+          <li>Clashes surfaced as they occur, before they become change orders</li>
+          <li>ACC is the hub; contractors' Procore, Tableau, Power BI, and Microsoft Project connect by API</li>
         </ul>
       </div>
       <div class="loop-card generate">
-        <span class="num">02</span>
-        <h3>Generate</h3>
-        <p>Design moves in seconds instead of weeks. Built from generative design work I have already run on live programs, where moves that took weeks became seconds.</p>
+        <span class="num">GENERATE</span>
+        <h3>Design moves in seconds</h3>
         <ul>
-          <li>Deterministic algorithms set the guardrails</li>
-          <li>LLMs generate options inside those guardrails, connected through MCP, the open standard that lets AI models drive real tools safely</li>
-          <li>Then deterministic checks again. Gates alternate, always</li>
-          <li>Test fits and sizing with no third party fees for work that needs no engineer's stamp</li>
-          <li>Runs in a browser through Autodesk Design Automation. Nobody needs Revit installed</li>
-          <li>Swap cabinets, re-size MEP, re-wire redundant power, keep every asset number</li>
+          <li>Deterministic guardrails alternate with AI generators, gate after gate</li>
+          <li>Connected through MCP, the open standard that lets AI models drive real tools safely</li>
+          <li>Runs in a browser through Autodesk's cloud; nobody needs Revit installed</li>
+          <li>No third party fees for work that needs no engineer's stamp. I have run this on live programs: weeks became seconds</li>
         </ul>
       </div>
       <div class="loop-card learn">
-        <span class="num">03</span>
-        <h3>Learn</h3>
-        <p>Every review and every generation makes the next one better. The system never stands still.</p>
+        <span class="num">LEARN</span>
+        <h3>Every pass sharpens the next</h3>
         <ul>
-          <li>AWS Bedrock agents tied to S3 data lakes</li>
-          <li>Every pass sends coordinates, parameters, and useful data to the lakes</li>
-          <li>Knowledge bases gated by review: deterministic, probabilistic, human, or all three</li>
-          <li>Tied to the rules, codes, and standards Hut 8 and its vendors flag as critical</li>
+          <li>AWS Bedrock agents on S3 data lakes that grow with every review and generation</li>
+          <li>Knowledge gated by review before it teaches anything</li>
+          <li>Tied to the codes and standards Hut 8 and its vendors flag as critical</li>
           <li>Grows from stakeholder input and exemplar designs fed in as standardized JSON</li>
         </ul>
       </div>
     </div>
 
-    <div class="schema-shell">
-      <h3>One JSON format ties all three together</h3>
-      <p class="muted" style="font-size:15px;max-width:760px;margin-top:6px">Review writes it. Generate reads it and writes it back. Learn grows from it. Same coordinates, same parameters, same distance relationships, same patterns. Nothing gets translated between steps, so nothing gets lost between steps.</p>
-      <pre class="json" aria-label="Shared JSON schema example"><span class="c">{</span>
-  <span class="k">"asset"</span>: <span class="s">"CRAC-B2-07"</span>,
-  <span class="k">"coordinates"</span>: [<span class="n">412.5</span>, <span class="n">96.0</span>, <span class="n">14.2</span>],
-  <span class="k">"parameters"</span>: { <span class="k">"make"</span>: <span class="s">"VendorA"</span>, <span class="k">"model"</span>: <span class="s">"CR-30"</span>, <span class="k">"cooling_kw"</span>: <span class="n">30</span> },
-  <span class="k">"relationships"</span>: [
-    { <span class="k">"to"</span>: <span class="s">"CAB-B2-ROW3"</span>, <span class="k">"type"</span>: <span class="s">"serves"</span>, <span class="k">"distance_ft"</span>: <span class="n">18.5</span> }
-  ],
-  <span class="k">"pattern"</span>: <span class="s">"2N-cooling-loop"</span>,
-  <span class="k">"stage"</span>: <span class="s">"fit-out"</span>,
-  <span class="k">"written_by"</span>: <span class="s">"review"</span>
-}</pre>
+    <div class="schema-line">
+      <p><b>One shared language.</b> All three read and write the exact same JSON: <code>{ coordinates, parameters, relationships, patterns }</code>. Nothing gets translated between steps, so nothing gets lost between steps. Every click in the demo writes it; you can watch it happen in the data panel.</p>
+    </div>
+
+    <div class="filters">
+      <span><b>The filter for everything:</b></span>
+      <span>Keep it simple</span><span>Cut cost</span><span>Cut time</span><span>Raise quality</span><span>Built to scale, never stagnant</span>
     </div>
   </div>
 </section>
 
-<!-- ================= PLAYGROUND ================= -->
-<section id="playground" aria-label="Interactive 3D demo">
-  <div class="wrap">
-    <p class="kicker">Generate, live</p>
-    <h2>Try the moves yourself</h2>
-    <p class="lede">This is the data center use case, running right here in this file. Swap the cabinet vendor and watch the containment re-size around it. Swap the GPUs and watch every asset number stay put. Toggle redundant cooling and watch the second power path appear. In production these same moves run against real Revit models through the Design Automation API, from a browser, in seconds.</p>
-
-    <div class="play-shell">
-      <div id="play-canvas-wrap">
-        <canvas id="play-canvas"></canvas>
-        <div class="canvas-fallback" id="play-fallback"><p>Your browser could not start 3D rendering. The demo shows a data hall where cabinets, GPUs, and redundant cooling swap on command while asset numbering holds steady.</p></div>
-      </div>
-      <div class="play-side">
-        <div class="play-btns">
-          <button class="play-btn" id="btn-vendor" type="button"><b>Swap cabinet vendor</b><span>Vendor A to Vendor B. New dimensions, containment re-fits, aisles hold clearance.</span></button>
-          <button class="play-btn" id="btn-gpu" type="button"><b>Swap the GPUs</b><span>New hardware generation drops in. Numbering of every CPU, switch, and GPU is preserved.</span></button>
-          <button class="play-btn" id="btn-2n" type="button"><b>Toggle 2N cooling</b><span>Re-wire redundant power to the CRAC units. A and B paths, live.</span></button>
-        </div>
-        <div id="play-json" aria-label="Live JSON state">loading...</div>
-      </div>
-    </div>
-    <p class="small" style="margin-top:14px">Every click you just made wrote the same JSON schema you saw above. That is the whole trick: the demo, the reviews, the generation, and the learning all speak one language.</p>
-  </div>
-</section>
-
-<!-- ================= HUT 8 ================= -->
 <section id="hut8" aria-label="Built for Hut 8">
   <div class="wrap">
-    <p class="kicker">Why this, why now</p>
+    <p class="kicker">02 · Why this, why now</p>
     <h2>Built for the scale Hut 8 is already building</h2>
-    <p class="lede">Hut 8 went from zero to $26.6 billion of contracted AI lease value in about a year. Yurt 8 is that same mission pointed inward: AI scaling the way Hut 8 designs, builds, and operates. Your leadership already names first principles infrastructure design as a core pillar. That is the exact filter this whole page runs on. The numbers below are public, and they are the reason a system like this pays for itself quickly at your scale.</p>
+    <p class="lede">Hut 8 went from zero to $26.6 billion of contracted AI lease value in about a year. Yurt 8 is that same mission pointed inward: AI scaling the way Hut 8 designs, builds, and operates. Your leadership already names first principles infrastructure design as a core pillar. That is the exact filter this whole page runs on.</p>
 
     <div class="tiles">
       {{HUT8_TILES}}
@@ -396,104 +332,54 @@ footer p{font-size:15px;color:var(--ink-2)}
       </div>
       <div class="path-card">
         <h3>Projects not yet started</h3>
-        <p>New work gets the full path from the first land scan: site selection scored on data, generative test fits before an architect is even engaged, end to end BIM through construction, and a working digital asset handed to operations on day one. Both paths get the same end to end treatment. No project is too far along to benefit, and none is too early.</p>
+        <p>New work gets the full path from the first land scan: site selection scored on data, generative test fits before an architect is even engaged, end to end BIM through construction, and a working digital asset handed to operations on day one. No project is too far along to benefit, and none is too early.</p>
       </div>
     </div>
-    <p class="lede" style="margin-top:26px;font-size:16.5px">One more public number worth sitting with: redesigning Beacon Point's first data hall to a new reference architecture added 57 percent more IT capacity on the same land and the same power. That is what a single great design iteration is worth at this scale. Yurt 8 exists to make that kind of move routine instead of heroic.</p>
+    <p class="lede" style="margin-top:30px;font-size:16px">One more public number worth sitting with: redesigning Beacon Point's first data hall to a new reference architecture added 57 percent more IT capacity on the same land and the same power. That is what a single great design iteration is worth at this scale. Yurt 8 exists to make that kind of move routine instead of heroic.</p>
   </div>
 </section>
 
-<!-- ================= UNDERNEATH ================= -->
-<section id="underneath" aria-label="ACC strategy, ISO 19650, IoT">
-  <div class="wrap">
-    <p class="kicker">Working quietly underneath</p>
-    <h2>The boring parts, kept deliberately boring</h2>
-    <p class="lede">The plumbing below is where digital delivery programs usually die: too clever, too heavy, too proud of themselves. Every choice here is the simple version on purpose.</p>
-
-    <div class="under-grid">
-      <div class="under-card">
-        <h3>ACC, used two different ways</h3>
-        <p>External vendors live in Autodesk Construction Cloud for day to day design work. It is their world and they are good at it. For Hut 8, ACC is deliberately treated as a limited tool: a data source we mine through its APIs, with the bells and whistles kept away. Owners do not need forty modules. They need the tracker.</p>
-        <p>Vendors get a simplified experience too: sensible permissions, clean folders, nothing to fight with.</p>
-      </div>
-      <div class="under-card">
-        <h3>A folder structure nobody has to hate</h3>
-        <p>ISO 19650 compliant, using ACC's own framework, four folders deep. That is the whole thing.</p>
-        <pre class="tree">HUT8-[PROJECT]
-├─ 01-WIP        <span class="c">each vendor's working area, their eyes only</span>
-├─ 02-SHARED     <span class="c">coordinated models, checked and clash reviewed</span>
-├─ 03-PUBLISHED  <span class="c">approved for construction, read only</span>
-└─ 04-ARCHIVE    <span class="c">every superseded version, kept automatically</span></pre>
-        <p class="small" style="margin-top:8px">Files move left to right only, and each move is a gate the system checks. Vendors keep working the way they already work.</p>
-      </div>
-      <div class="under-card">
-        <h3>ISO 19650 without the ceremony</h3>
-        <p>The standard earns its keep in exactly one place here: every asset gets one ID at design and keeps it for life. That ID is the same name in the model, in the JSON schema, on the physical tag, and in the sensor feed. The versions of ISO 19650 that get lauded at conferences and never survive contact with an American job site are exactly what this is not.</p>
-      </div>
-      <div class="under-card">
-        <h3>Sensors reporting to the same brain</h3>
-        <p>IoT monitoring of assets and sites, what the industry calls CSSM, feeds the Operations stage of the tracker through the same JSON schema. Temperature, power, vibration, door state: the building reports on itself the way projects report on themselves. Autodesk Tandem is an interesting reference point for digital twins. This is the simpler version: same IDs, same schema, live data, no second platform to maintain.</p>
-      </div>
-      <div class="under-card">
-        <h3>The stack, in one breath</h3>
-        <ul>
-          <li>ACC APIs mine files, models, issues, and versions from the CDE</li>
-          <li>Procore, Tableau, Power BI, and Microsoft Project connect through their own APIs for cost and schedule truth</li>
-          <li>Autodesk Design Automation runs Revit work in the cloud, no install</li>
-          <li>MCP connects deterministic tools to LLM reasoning, in alternating gates</li>
-          <li>AWS Bedrock agents over S3 data lakes do the learning</li>
-        </ul>
-      </div>
-      <div class="under-card">
-        <h3>Why the 3D you just used matters</h3>
-        <p>The scene above ships inside this single file: web native 3D that runs anywhere, offline, with no install and no servers. That is the right tool for owner facing delivery today. When Hut 8 wants production scale simulation, the path is NVIDIA Omniverse and the open source OpenUSD ecosystem (Core Spec 1.0 shipped December 2025): full physics digital twins of entire AI factories, the same world NVIDIA's DSX blueprint targets, and a natural fit given Beacon Point's first hall is already designed to NVIDIA's DSX reference architecture. Nice to have later; not needed to start saving money now.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= ROADMAP ================= -->
 <section id="roadmap" aria-label="Roadmap and team">
   <div class="wrap">
-    <p class="kicker">The plan</p>
+    <p class="kicker">03 · The plan</p>
     <h2>Twenty four months, reported monthly in dollars and days</h2>
     <p class="lede">Build the tool, build the team, then maintain and scale both. Every month closes with one page for leadership: dollars moved, days moved, and which scenario the data came from, whether alpha, beta, or live. If a month cannot show both numbers, that month failed and I will say so plainly.</p>
 
     <div class="road">
       <div class="mile"><span class="when">Months 1 to 2</span><h3>Wire into what exists</h3>
         <p>ACC API mining live on one active project. Tracker alpha stands up. The first standardized spreadsheets and plain English RFI feeds reach the owner.</p>
-        <div class="check"><b>Checkpoint:</b> first clash caught on screen instead of in the field, priced against what the change order would have cost. Data source: live project.</div></div>
+        <div class="check"><b>Checkpoint:</b> first clash caught on screen instead of in the field, priced against what the change order would have cost. Source: live.</div></div>
       <div class="mile"><span class="when">Months 3 to 4</span><h3>Review, fully live</h3>
         <p>Model feeds, financial summaries, and clash surfacing running across the active portfolio. Procore and schedule connections land. Leadership sees the tracker for the first time and never asks for a status deck again.</p>
-        <div class="check"><b>Checkpoint:</b> avoidable slowdowns identified and priced, monthly. Data source: live portfolio.</div></div>
+        <div class="check"><b>Checkpoint:</b> avoidable slowdowns identified and priced, monthly. Source: live.</div></div>
       <div class="mile"><span class="when">Months 5 to 6</span><h3>Generate, first wins</h3>
-        <p>Generative test fits and sizing runs on the real cabinet library. The first design work that needs no engineer's stamp comes in house: work that used to take weeks and third party fees now takes seconds. The S3 lakes start filling.</p>
-        <div class="check"><b>Checkpoint:</b> third party design fees eliminated, itemized per run. Data source: beta on live layouts.</div></div>
+        <p>Generative test fits and sizing on the real cabinet library. The first design work that needs no engineer's stamp comes in house: weeks and third party fees become seconds. The S3 lakes start filling.</p>
+        <div class="check"><b>Checkpoint:</b> third party design fees eliminated, itemized per run. Source: beta on live layouts.</div></div>
       <div class="mile team"><span class="when">Months 7 to 9</span><h3>Second renaissance engineer</h3>
-        <p>Generate moves into the browser through Design Automation so anyone Hut 8 authorizes can run it without Revit. Hire two arrives: a Swiss army knife engineer, because every seat here is coveted and no seat is decorative.</p>
-        <div class="check"><b>Checkpoint:</b> design cycle time, before vs after, in days. Data source: live.</div></div>
+        <p>Generate moves into the browser so anyone Hut 8 authorizes can run it without Revit. Hire two arrives: a Swiss army knife engineer, because every seat here is coveted and no seat is decorative.</p>
+        <div class="check"><b>Checkpoint:</b> design cycle time, before vs after, in days. Source: live.</div></div>
       <div class="mile"><span class="when">Months 10 to 12</span><h3>Learn, gated and growing</h3>
         <p>Bedrock knowledge bases go live, gated by review and tied to the codes and standards Hut 8 and its vendors flag. Year one closes with a full tally.</p>
-        <div class="check"><b>Checkpoint:</b> year one savings tally against the model below, line by line. Data source: live plus beta.</div></div>
+        <div class="check"><b>Checkpoint:</b> year one savings tally against the model below, line by line. Source: live plus beta.</div></div>
       <div class="mile team"><span class="when">Months 13 to 18</span><h3>Portfolio wide, third engineer</h3>
-        <p>Every active project on the tracker. IoT and CSSM feeds light up Operations. Hire three arrives. The system now prevents most chaos; the team stays drilled for forest fire days anyway.</p>
-        <div class="check"><b>Checkpoint:</b> change order rate vs baseline, portfolio wide. Data source: live.</div></div>
+        <p>Every active project on the tracker. IoT and site monitoring feeds light up Operations. Hire three arrives. The system now prevents most chaos; the team stays drilled for forest fire days anyway.</p>
+        <div class="check"><b>Checkpoint:</b> change order rate vs baseline, portfolio wide. Source: live.</div></div>
       <div class="mile"><span class="when">Months 19 to 24</span><h3>Full lifecycle, compounding</h3>
-        <p>Site selection through operations on one loop. Learning compounds: every review sharpens generation, every generation feeds the lakes. Year two closes with the savings model re-baselined for scale.</p>
-        <div class="check"><b>Checkpoint:</b> year two tally, and the year three plan priced from real data. Data source: live.</div></div>
+        <p>Site selection through operations on one loop. Every review sharpens generation; every generation feeds the lakes. Year two closes with the savings model re-baselined for scale.</p>
+        <div class="check"><b>Checkpoint:</b> year two tally, and the year three plan priced from real data. Source: live.</div></div>
     </div>
 
     <div class="callout">
       <p><b>On meetings:</b> meetings are for decisions. Status lives on the tracker, where it is always current and nobody has to perform it. If there is no decision to make, it is an email, and usually it is nothing.</p>
-      <p style="margin-top:10px"><b>On the team:</b> start at one, me. Scale to three. Every hire is a renaissance engineer at the top of their discipline who rejects traditional role boundaries. Critical thought, delivered results, first principles, real teamwork. No idle hires, no seat fillers, ever.</p>
+      <p style="margin-top:12px"><b>On the team:</b> start at one, me. Scale to three. Every hire is a renaissance engineer at the top of their discipline who rejects traditional role boundaries. Critical thought, delivered results, first principles, real teamwork. No idle hires, no seat fillers, ever.</p>
+      <p style="margin-top:12px"><b>On the plumbing:</b> vendors keep working in ACC, simplified through clean permissions and a four folder ISO 19650 structure that will not make anyone's life hell. Hut 8 sees the tracker, not forty modules. Every asset gets one ID for life: in the model, on the tag, in the sensor feed. The over-engineered version of that standard that never survives an American job site is exactly what this is not.</p>
     </div>
   </div>
 </section>
 
-<!-- ================= MONEY ================= -->
 <section id="money" aria-label="Cost and value model">
   <div class="wrap">
-    <p class="kicker">The money</p>
+    <p class="kicker">04 · The money</p>
     <h2>What it costs, what it returns, where the numbers come from</h2>
     <p class="lede">No dollar here is mysteriously earned. Every savings line ties to construction cost, change orders, third party fees, or the CAPEX line every owner operator watches. I anchored every figure to Hut 8's public scale and kept it deliberately conservative.</p>
 
@@ -518,10 +404,9 @@ footer p{font-size:15px;color:var(--ink-2)}
   </div>
 </section>
 
-<!-- ================= HOMEWORK ================= -->
 <section id="homework" aria-label="Show my homework">
   <div class="wrap">
-    <p class="kicker">Show my homework</p>
+    <p class="kicker">05 · Show my homework</p>
     <h2>No black boxes</h2>
     <p class="lede">Here is exactly how I made this case study, what tools did the work, and what I bring with or without them. The only thing excluded is prior employer material, which appears nowhere in this work.</p>
 
@@ -540,8 +425,8 @@ footer p{font-size:15px;color:var(--ink-2)}
         <p>I produced this in two days working squarely in my lane: BIM, generative design, and program delivery. Point me at a problem outside my lane and the same financial logic arrives; it just costs more calendar. I learn fast, I stay motivated, and I stay curious. Those three traits let me wrap myself around new topics and familiar ones with equal enthusiasm, and they are among my most lucrative assets.</p>
       </div>
       <div class="hw-card">
-        <h3>What is in this file</h3>
-        <p>Web native 3D (three.js) embedded directly, so the page ships as one file, runs anywhere, needs no install and no servers. Public Hut 8 figures with sources. Zero confidential material. The production scale path, NVIDIA Omniverse and OpenUSD, is written into the plan for when simulation depth earns its cost.</p>
+        <h3>The 3D, today and at scale</h3>
+        <p>The demo is web native 3D that ships in one file and runs anywhere, with no install and no servers. That is the right tool for owner facing delivery today. When Hut 8 wants production scale simulation, the path is NVIDIA Omniverse and the open source OpenUSD ecosystem: full physics digital twins of entire AI factories, a natural fit given Beacon Point's first hall is already designed to NVIDIA's DSX reference architecture. Nice to have later; not needed to start saving money now.</p>
       </div>
     </div>
 
@@ -552,13 +437,11 @@ footer p{font-size:15px;color:var(--ink-2)}
   </div>
 </section>
 
-<!-- ================= FOOTER ================= -->
 <footer>
   <div class="wrap foot-grid">
     <div>
       <h3>Andres Felipe Pena</h3>
       <p>Senior technical program manager, generative design and infrastructure automation. I build systems that make buildings cheaper, faster, and better, and I show my work.</p>
-      <p class="small" style="margin-top:12px">This page is a single self contained file. Save it, email it, open it on a plane. The brochure PDF tells the same story in two pages.</p>
     </div>
     <div>
       <ul class="foot-links">
@@ -571,6 +454,49 @@ footer p{font-size:15px;color:var(--ink-2)}
     </div>
   </div>
 </footer>
+
+</div><!-- /view-landing -->
+
+<!-- ============================================================
+     VIEW 2: DEMO
+     ============================================================ -->
+<div id="view-demo" class="view" aria-label="Yurt 8 demo">
+  <div class="demo-top">
+    <button class="demo-logo" id="btn-back" type="button" aria-label="Back to landing page">YURT <span class="eight">8</span><span class="back">&larr; back</span></button>
+    <div class="mini-tracker" id="mini-tracker" aria-label="Project tracker, current stage Fit-out">
+      <div id="mini-fill"></div>
+      <!-- stages injected -->
+    </div>
+  </div>
+
+  <div class="demo-main">
+    <div class="demo-rail" id="site-rail" aria-label="Portfolio site selector">
+      <div class="rail-title">Portfolio</div>
+      <!-- site buttons injected -->
+      <div class="rail-actions" id="rail-actions">
+        <!-- action buttons injected per site -->
+      </div>
+    </div>
+
+    <div id="demo-stage">
+      <canvas id="demo-canvas"></canvas>
+      <div class="orbit-legend" aria-label="Camera controls"><b>Orbit:</b> drag &nbsp;·&nbsp; <b>Zoom:</b> scroll or pinch</div>
+      <div class="mep-legend" id="mep-legend"><!-- injected --></div>
+      <div class="site-title" id="site-title"><!-- injected --></div>
+      <div class="demo-fallback" id="demo-fallback"><p>Your browser could not start 3D rendering. The demo shows portfolio sites where cabinets, GPUs, cooling, turbines, and penstocks swap on command while asset numbering holds steady.</p></div>
+    </div>
+
+    <div class="demo-data" id="demo-data">
+      <!-- injected per site -->
+    </div>
+  </div>
+
+  <div class="demo-ribbon" id="demo-ribbon" aria-label="Seven disciplines">
+    <span class="rib-label">Seven disciplines, every stage</span>
+    <!-- ribbon buttons injected -->
+    <div class="rib-sheet" id="rib-sheet" role="dialog"><!-- injected --></div>
+  </div>
+</div><!-- /view-demo -->
 
 <div id="chart-tip" role="tooltip"></div>
 
