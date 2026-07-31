@@ -3,6 +3,25 @@
 Every open question I hit while building, with the default I chose and why. Flag
 anything here you want changed and I will rebuild around it.
 
+## Iteration 3 (flower palette review, July 31)
+
+G. **Palette locked from your image.** Exact sampled values: #0b011a aubergine,
+   #081a32 ink navy, #0f3a5c steel, #780e36 berry, #f9552f orange, #f8c953 gold.
+   Orange is the primary contrast accent, gold the secondary; green is gone
+   everywhere. Chart colors re-validated for colorblind safety on the new surface.
+H. **Landing is hero only.** The story sections moved behind the third button,
+   Detailed Summary, at #summary. The leadership sentence came out of the hero sub
+   line and lives in the summary intro instead.
+I. **Segoe UI in the PDF.** Segoe itself does not exist on the Linux build machine
+   and Microsoft's Selawik metric twin is not on npm, so the PDF embeds Open Sans
+   (the closest humanist match) behind a "Segoe UI" first font stack; anyone opening
+   the HTML on Windows gets real Segoe UI via the system stack.
+J. **Tutorial state.** The game style tour auto plays on first demo open and stores
+   a seen flag in localStorage; the ? button in the demo top bar replays it anytime.
+K. **"Pods" modeled as containment pod groups** of three cabinets with gold portal
+   frames and POD labels, hot aisles contained in orange tint between rows, cold
+   aisles marked in blue on the outer faces.
+
 ## Iteration 2 (your review edits, July 31)
 
 A. **ResumeAutomator1 is empty.** github.com/PracticalConstructs/ResumeAutomator1

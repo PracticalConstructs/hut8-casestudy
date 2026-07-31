@@ -10,8 +10,14 @@ const repo = path.resolve(build, '..', '..');
 
 (async () => {
   const fill = JSON.parse(fs.readFileSync(path.join(build, 'fill.json'), 'utf8'));
+  const pdfFonts = [400, 600, 700].map(w => {
+    const b64 = fs.readFileSync(path.join(build, 'node_modules', '@fontsource', 'open-sans', 'files',
+      `open-sans-latin-${w}-normal.woff2`)).toString('base64');
+    return `@font-face{font-family:"Open Sans";font-style:normal;font-weight:${w};src:url(data:font/woff2;base64,${b64}) format("woff2")}`;
+  }).join('\n');
   let html = fs.readFileSync(path.join(build, 'pdf.html'), 'utf8');
   html = html
+    .replace('{{PDF_FONTS}}', () => pdfFonts)
     .replace('{{PDF_MONEY_TILES}}', fill.PDF_MONEY_TILES)
     .replace('{{PDF_MONEY_TABLE}}', fill.PDF_MONEY_TABLE)
     .replace('{{PDF_HUT8_ANCHOR}}', fill.PDF_HUT8_ANCHOR)

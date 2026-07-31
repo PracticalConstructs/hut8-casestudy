@@ -4,97 +4,109 @@
 <meta charset="UTF-8">
 <title>Yurt 8: A Case Study for Hut 8</title>
 <style>
+{{PDF_FONTS}}
 :root{
-  --ink:#1c2420; --muted:#5c675e; --soft:#8b948c;
-  --green:#4e7d43; --leaf:#8fbe6e; --band:#0f1710; --mint:#cde8cf;
-  --hairline:#dde3dc; --wash:#f3f6f2;
+  --ink:#1a2230; --muted:#55617a; --soft:#8a94a8;
+  --navy:#16384c; --steel:#0f3a5c; --orange:#e64a24; --orange-bright:#f9552f; --gold:#f8c953;
+  --band:#081a32; --hairline:#dfe4ec; --wash:#f2f5fa;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 @page{size:Letter;margin:0}
 html,body{width:8.5in}
-body{font-family:"Liberation Sans",Arial,sans-serif;color:var(--ink);font-size:9.5pt;line-height:1.5;background:#fff}
-.page{width:8.5in;height:11in;padding:.5in .6in;position:relative;overflow:hidden;page-break-after:always;display:flex;flex-direction:column}
+body{font-family:"Segoe UI","Open Sans",Arial,sans-serif;color:var(--ink);font-size:9.2pt;line-height:1.46;background:#fff}
+.page{width:8.5in;height:11in;padding:.42in .6in;position:relative;overflow:hidden;page-break-after:always;display:flex;flex-direction:column}
 .page:last-child{page-break-after:auto}
+a{color:var(--steel);text-decoration:none}
 
-/* header */
-.band{background:var(--band);color:#fff;border-radius:12px;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+/* header band */
+.band{background:var(--band);color:#fff;border-radius:12px;padding:13px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .band h1{font-size:24pt;letter-spacing:-.01em;line-height:1;font-weight:700}
-.band h1 span{color:var(--leaf)}
-.band .tag{font-size:9.5pt;color:#c2d0c2;margin-top:5px}
-.band .who{text-align:right;font-size:8pt;color:#c2d0c2;line-height:1.55}
+.band h1 span{color:var(--orange-bright)}
+.band .tag{font-size:9.5pt;color:var(--gold);margin-top:4px}
+.band .who{text-align:right;font-size:8pt;color:#b9c6d8;line-height:1.55}
 .band .who b{color:#fff;font-size:9.5pt}
-.band .who a{color:var(--mint);text-decoration:none}
+.band .who a{color:#9cc4e0}
 
-/* the ONLY heading style */
-h2{font-size:15pt;font-weight:700;margin:0 0 6px;padding-top:14px;border-top:2.5px solid var(--green)}
+/* one heading style */
+h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 4px;padding-top:8px;border-top:2.5px solid var(--orange)}
 h2.first{border-top:none;padding-top:0}
 p{color:var(--muted)}
-p.body{font-size:9.5pt;max-width:7.2in}
+p.body{font-size:9.4pt;max-width:7.2in}
 b{color:var(--ink)}
-.small{font-size:8pt;color:var(--soft)}
+.small{font-size:7.8pt;color:var(--soft);line-height:1.35}
 
 /* tracker */
-.tracker{margin:10px 0 4px}
+.tracker{margin:8px 0 2px}
 .t-line{display:flex;position:relative}
-.t-line::before{content:"";position:absolute;top:9px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,var(--leaf),var(--green));border-radius:2px}
+.t-line::before{content:"";position:absolute;top:9px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,var(--orange-bright),var(--gold));border-radius:2px}
 .t-cell{flex:1;text-align:center;position:relative;padding:0 4px}
-.t-cell .dot{width:18px;height:18px;border-radius:50%;background:#fff;border:3.5px solid var(--green);margin:0 auto 5px;position:relative;z-index:1}
-.t-cell b{display:block;font-size:8.5pt;line-height:1.2;margin-bottom:2px}
-.t-cell span{font-size:7.5pt;color:var(--muted);line-height:1.35;display:block}
+.t-cell .dot{width:17px;height:17px;border-radius:50%;background:#fff;border:3.5px solid var(--orange);margin:0 auto 4px;position:relative;z-index:1}
+.t-cell b{display:block;font-size:8.4pt;line-height:1.2;margin-bottom:1px}
+.t-cell span{font-size:7.1pt;color:var(--muted);line-height:1.25;display:block}
 
-/* three columns, no boxes */
-.cols{display:flex;gap:22px;margin-top:8px}
+/* images row */
+.imgs{display:flex;gap:12px;margin:9px 0 2px}
+.imgs figure{flex:1;margin:0}
+.imgs img{width:100%;height:1.08in;object-fit:cover;border-radius:9px;display:block;border:1px solid var(--hairline)}
+.imgs figcaption{font-size:7.2pt;color:var(--soft);margin-top:3px}
+.imgs figcaption a{color:var(--steel);font-weight:600}
+
+/* three columns */
+.cols{display:flex;gap:20px;margin-top:6px}
 .col{flex:1}
-.col h3{font-size:9.5pt;font-weight:700;color:var(--green);margin-bottom:3px}
+.col h3{font-size:9.4pt;font-weight:700;color:var(--steel);margin-bottom:2px}
 .col ul{list-style:none}
-.col li{font-size:8pt;color:var(--muted);padding:2px 0 2px 10px;position:relative;line-height:1.4}
-.col li::before{content:"";position:absolute;left:0;top:7.5px;width:4px;height:4px;border-radius:50%;background:var(--leaf)}
+.col li{font-size:7.6pt;color:var(--muted);padding:1.1px 0 1.1px 10px;position:relative;line-height:1.35}
+.col li::before{content:"";position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:var(--orange)}
 
-.shared{margin-top:10px;border-left:3px solid var(--leaf);padding:2px 0 2px 12px;font-size:8.5pt;color:var(--muted);max-width:7.1in}
-.shared code{font-family:"Liberation Mono",monospace;font-size:7.8pt;color:var(--green)}
+.shared{margin-top:6px;border-left:3px solid var(--orange);padding:2px 0 2px 12px;font-size:8.2pt;color:var(--muted);max-width:7.1in}
+.shared code{font-family:Consolas,"Liberation Mono",monospace;font-size:7.7pt;color:var(--steel)}
 
-/* quiet row */
-.quiet{display:flex;gap:22px;margin-top:8px}
-.quiet .q{flex:1;border-top:1px solid var(--hairline);padding-top:7px}
-.quiet h3{font-size:9.5pt;font-weight:700;margin-bottom:3px}
-.quiet p{font-size:8pt;line-height:1.45}
-.quiet pre{font-family:"Liberation Mono",monospace;font-size:7.2pt;line-height:1.5;color:var(--ink);margin-top:3px}
+.quiet{display:flex;gap:20px;margin-top:8px}
+.quiet .q{flex:1;border-top:1px solid var(--hairline);padding-top:6px}
+.quiet h3{font-size:9.2pt;font-weight:700;color:var(--steel);margin-bottom:2px}
+.quiet p{font-size:7.6pt;line-height:1.38}
+.quiet pre{font-family:Consolas,"Liberation Mono",monospace;font-size:6.8pt;line-height:1.5;color:var(--ink);margin-top:3px}
 .quiet pre span{color:var(--soft)}
 
-.pfoot{margin-top:auto;padding-top:10px;font-size:7.5pt;color:var(--soft);display:flex;justify-content:space-between;border-top:1px solid var(--hairline)}
+.pfoot{margin-top:auto;padding-top:9px;font-size:7.4pt;color:var(--soft);display:flex;justify-content:space-between;border-top:1px solid var(--hairline)}
+.pfoot a{color:var(--steel)}
 
 /* page 2 */
-.p2{display:flex;gap:26px;flex:1;margin-top:6px}
+.p2{display:flex;gap:24px;flex:1;margin-top:4px}
 .p2-left{flex:1.12}
 .p2-right{flex:1}
 
-.vt{position:relative;padding-left:18px;margin-top:8px}
+.vt{position:relative;padding-left:18px;margin-top:6px}
 .vt::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2.5px;background:var(--hairline);border-radius:2px}
-.vt .m{position:relative;padding-bottom:8px}
-.vt .m::before{content:"";position:absolute;left:-17px;top:4px;width:8px;height:8px;border-radius:50%;background:#fff;border:2.5px solid var(--green)}
-.vt .when{font-size:8pt;font-weight:700;color:var(--green)}
-.vt h3{font-size:10pt;font-weight:700;margin:1px 0 2px}
-.vt p{font-size:8pt;line-height:1.45;max-width:3.7in}
-.vt .chk{font-size:8pt;color:var(--ink);margin-top:2px}
-.vt .chk b{color:var(--green)}
+.vt .m{position:relative;padding-bottom:5.5px}
+.vt .m::before{content:"";position:absolute;left:-17px;top:4px;width:8px;height:8px;border-radius:50%;background:#fff;border:2.5px solid var(--orange)}
+.vt .when{font-size:7.9pt;font-weight:700;color:var(--orange)}
+.vt h3{font-size:9.8pt;font-weight:700;color:var(--ink);margin:1px 0 2px}
+.vt p{font-size:7.7pt;line-height:1.4;max-width:3.7in}
+.vt .chk{font-size:7.9pt;color:var(--ink)}
+.vt .chk b{color:var(--steel)}
 
-.ask{display:flex;gap:0;border:1px solid var(--hairline);border-radius:10px;overflow:hidden;margin-bottom:12px}
-.ask .a{flex:1;text-align:center;padding:8px 6px;border-left:1px solid var(--hairline)}
+.ask{display:flex;border:1px solid var(--hairline);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.ask .a{flex:1;text-align:center;padding:6.5px 6px;border-left:1px solid var(--hairline)}
 .ask .a:first-child{border-left:none}
-.ask .v{font-size:14pt;font-weight:700}
-.ask .v.hot{color:var(--green)}
-.ask .l{font-size:7.2pt;color:var(--muted);line-height:1.3;margin-top:2px}
+.ask .v{font-size:13.5pt;font-weight:700;color:var(--navy)}
+.ask .v.hot{color:var(--orange)}
+.ask .l{font-size:7.1pt;color:var(--muted);line-height:1.3;margin-top:2px}
 
-table.money{width:100%;border-collapse:collapse;font-size:8.2pt;margin-bottom:12px}
-table.money th{text-align:left;font-size:8pt;font-weight:700;color:var(--ink);padding:4px 6px;border-bottom:2px solid var(--green)}
+table.money{width:100%;border-collapse:collapse;font-size:8.1pt;margin-bottom:10px}
+table.money th{text-align:left;font-size:7.9pt;font-weight:700;color:var(--ink);padding:4px 6px;border-bottom:2px solid var(--orange)}
 table.money th.r,table.money td.r{text-align:right;font-variant-numeric:tabular-nums}
-table.money td{padding:3px 6px;border-bottom:1px solid var(--hairline);color:var(--muted)}
+table.money td{padding:2.2px 6px;border-bottom:1px solid var(--hairline);color:var(--muted)}
 table.money td:first-child{color:var(--ink)}
-table.money tr.sec td{font-weight:700;color:var(--green);border-bottom:1px solid var(--hairline);padding-top:8px}
+table.money tr.sec td{font-weight:700;color:var(--steel);border-bottom:1px solid var(--hairline);padding-top:7px}
 table.money tr.total td{font-weight:700;color:var(--ink)}
 
-.p2 p.tight{font-size:7.8pt;line-height:1.45;margin-bottom:7px}
-.src{font-size:7pt;color:var(--soft);line-height:1.45}
+.p2 p.tight{font-size:7.5pt;line-height:1.4;margin-bottom:5px}
+.links{background:var(--wash);border:1px solid var(--hairline);border-radius:10px;padding:6px 11px;margin-bottom:7px;font-size:7.6pt;line-height:1.45}
+.links b{color:var(--navy)}
+.links a{font-weight:600}
+.src{font-size:6.9pt;color:var(--soft);line-height:1.45}
 </style>
 </head>
 <body>
@@ -109,14 +121,14 @@ table.money tr.total td{font-weight:700;color:var(--ink)}
     <div class="who">
       <b>Andres Felipe Pena</b><br>
       andres.p.22455@gmail.com &nbsp;·&nbsp; 347 891 5547<br>
-      Interactive demo: <a href="https://practicalconstructs.github.io/hut8-casestudy/">practicalconstructs.github.io/hut8-casestudy</a>
+      Live: <a href="https://practicalconstructs.github.io/hut8-casestudy/">practicalconstructs.github.io/hut8-casestudy</a>
     </div>
   </div>
 
   <p class="body">Yurt 8 is one system that watches every project in the portfolio, generates the next design move on demand, and learns from both, so each pass gets faster, cheaper, and sharper. It is built so leadership sees dollars and days move every single month, and it is built to Hut 8's mission: scaling AI, and using AI to scale itself. The filter for everything in it: keep it simple, cut cost, cut time, raise quality, built to scale.</p>
 
-  <h2 style="margin-top:14px">A pizza tracker for buildings</h2>
-  <p class="body" style="font-size:8.5pt">Domino's earned trust by letting people watch the pizza move. Owners deserve the same view of their capital projects. Every project lives on one chronological tracker, wired to the live data that matters at each stage. Not a status slide. The live state of the work.</p>
+  <h2 style="margin-top:11px">A pizza tracker for buildings</h2>
+  <p class="body" style="font-size:8.4pt">Domino's earned trust by letting people watch the pizza move. Owners deserve the same view of their capital projects. Every project lives on one chronological tracker, wired to the live data that matters at each stage. Not a status slide. The live state of the work.</p>
   <div class="tracker">
     <div class="t-line">
       <div class="t-cell"><span class="dot"></span><b>Site Selection</b><span>Land, power, fiber, and tax scored on data before a dollar commits</span></div>
@@ -128,9 +140,20 @@ table.money tr.total td{font-weight:700;color:var(--ink)}
       <div class="t-cell"><span class="dot"></span><b>Operations</b><span>The building starts reporting to you, through the same system</span></div>
     </div>
   </div>
-  <p class="small" style="margin-top:4px">Running under every stage: clash detection, BIM, information management, model management, user management, project management, and project delivery. I would also add cost, schedule, safety and QA/QC, commissioning and handover, and energy tracking; those five are flagged for your review.</p>
+  <p class="small" style="margin-top:3px">Running under every stage: clash detection, BIM, information management, model management, user management, project management, and project delivery. I would also add cost, schedule, safety and QA/QC, commissioning and handover, and energy tracking; those five are flagged for your review.</p>
 
-  <h2 style="margin-top:12px">Review. Generate. Learn. Repeat.</h2>
+  <div class="imgs">
+    <figure>
+      <img src="img/pdf-vega.jpg" alt="Vega Campus data hall in the live 3D demo: pods, busways, chilled water, and containment, color coded">
+      <figcaption>The live demo at Fit-out: pods, busways, chilled water, and containment, color coded. <a href="https://practicalconstructs.github.io/hut8-casestudy/#demo">Demo the Tool</a></figcaption>
+    </figure>
+    <figure>
+      <img src="img/pdf-hydro.jpg" alt="Hydro station concept in the demo: dam, penstocks, turbine units, transformers">
+      <figcaption>The same loop pointed at a generation asset: dam, penstocks, turbines, switchyard. <a href="https://practicalconstructs.github.io/hut8-casestudy/#demo">Demo the Tool</a></figcaption>
+    </figure>
+  </div>
+
+  <h2 style="margin-top:9px">Review. Generate. Learn. Repeat.</h2>
   <div class="cols">
     <div class="col">
       <h3>Review: see everything as it happens</h3>
@@ -187,7 +210,7 @@ table.money tr.total td{font-weight:700;color:var(--ink)}
 <!-- ================= PAGE 2 ================= -->
 <div class="page">
   <h2 class="first">Twenty four months, reported monthly in dollars and days</h2>
-  <p class="body" style="font-size:8.5pt">Build the tool, build the team, then maintain and scale both. Every month closes with one page for leadership: dollars moved, days moved, and which scenario the data came from, alpha, beta, or live. If a month cannot show both numbers, that month failed and I will say so plainly.</p>
+  <p class="body" style="font-size:8.4pt">Build the tool, build the team, then maintain and scale both. Every month closes with one page for leadership: dollars moved, days moved, and which scenario the data came from, alpha, beta, or live. If a month cannot show both numbers, that month failed and I will say so plainly.</p>
 
   <div class="p2">
     <div class="p2-left">
@@ -201,13 +224,13 @@ table.money tr.total td{font-weight:700;color:var(--ink)}
         <div class="m"><span class="when">Months 19 to 24</span><h3>Full lifecycle, compounding</h3><p>Site selection through operations on one loop. Every review sharpens generation; every generation feeds the lakes. <span class="chk"><b>Checkpoint:</b> year two tally, and year three priced from real data.</span></p></div>
       </div>
 
-      <p class="tight" style="margin-top:6px"><b>On meetings:</b> meetings are for decisions. Status lives on the tracker. No decision, no meeting.</p>
+      <p class="tight" style="margin-top:5px"><b>On meetings:</b> meetings are for decisions. Status lives on the tracker. No decision, no meeting.</p>
       <p class="tight"><b>On the team:</b> one, then three. Every hire a renaissance engineer who rejects role boundaries. Critical thought, delivered results, first principles, real teamwork. No seat fillers, ever. The system prevents chaos; the team stays drilled for forest fires anyway.</p>
     </div>
 
     <div class="p2-right">
-      <h2 class="first" style="font-size:13pt">The money</h2>
-      <div class="ask" style="margin-top:8px">
+      <h2 class="first" style="font-size:12.5pt">The money</h2>
+      <div class="ask" style="margin-top:7px">
         {{PDF_MONEY_TILES}}
       </div>
       <table class="money">
@@ -216,11 +239,17 @@ table.money tr.total td{font-weight:700;color:var(--ink)}
       <p class="tight"><b>Why these savings are real at Hut 8's scale.</b> {{PDF_HUT8_ANCHOR}}</p>
       <p class="tight"><b>Show my homework.</b> The interactive demo opens the hood: the exact prompt that drove my AI build agents, the architecture, and the sources. I built this in two days with a multi agent setup I designed, and I can build the same without AI: HTML, Python, C#, C, and .NET are home turf. Point me outside my comfort zone and the same financial logic arrives; I learn fast, and I stay motivated and curious.</p>
       <p class="tight"><b>The 3D in the demo:</b> web native, ships as one file, runs offline, no installs, no servers. When simulation depth earns its cost, the path is NVIDIA Omniverse and the open source OpenUSD ecosystem.</p>
+      <div class="links">
+        <b>See it, not just read it:</b><br>
+        <a href="https://practicalconstructs.github.io/hut8-casestudy/">Start page</a> · the system in one screen<br>
+        <a href="https://practicalconstructs.github.io/hut8-casestudy/#demo">Demo the Tool</a> · the live 3D portfolio, guided tour included<br>
+        <a href="https://practicalconstructs.github.io/hut8-casestudy/#summary">Detailed Summary</a> · the full story, plan, and math
+      </div>
       <p class="src">{{PDF_SOURCES}}</p>
     </div>
   </div>
 
-  <div class="pfoot"><span>Andres Felipe Pena · andres.p.22455@gmail.com · 347 891 5547 · Demo: practicalconstructs.github.io/hut8-casestudy</span><span>Page 2 of 2</span></div>
+  <div class="pfoot"><span>Andres Felipe Pena · andres.p.22455@gmail.com · 347 891 5547 · <a href="https://practicalconstructs.github.io/hut8-casestudy/">practicalconstructs.github.io/hut8-casestudy</a></span><span>Page 2 of 2</span></div>
 </div>
 
 </body>
