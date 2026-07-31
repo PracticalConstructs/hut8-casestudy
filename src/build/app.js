@@ -317,14 +317,46 @@
     { key: 'delivery', name: 'Project Delivery', icon: '<path d="M4 21V4"/><path d="M4 5h13l-2.5 3.5L17 12H4"/>', text: 'The handoffs between design, construction, and operations, made boring on purpose. Operations gets a working digital asset on day one, not a box of PDFs.' },
   ];
 
+  /* Real cabinet proportions: a 42U rack stands about 2.0m, a 48U about 2.27m.
+     Equipment is laid out on the actual U pitch (44.45mm) inside 19 inch rails. */
   var VENDORS = {
-    vertiv: { name: 'Vertiv VR', w: 0.6, d: 1.2, h: 2.0, u: 48, gap: 0.5, frame: 0x1e2c40, door: '#26364e', perf: 6 },
-    rittal: { name: 'Rittal TS IT', w: 0.8, d: 1.2, h: 2.2, u: 42, gap: 0.42, frame: 0x31435f, door: '#3c5070', perf: 8 },
+    vertiv: { name: 'Vertiv VR 48U', w: 0.6, d: 1.2, h: 2.27, u: 48, gap: 0.5, frame: 0x1e2c40, door: '#26364e', perf: 6 },
+    rittal: { name: 'Rittal TS IT 42U', w: 0.8, d: 1.2, h: 2.0, u: 42, gap: 0.42, frame: 0x31435f, door: '#3c5070', perf: 8 },
   };
   var GPUS = {
-    h100: { name: 'NVIDIA HGX H100', color: 0x3fd08a },
-    gb200: { name: 'NVIDIA GB200 NVL', color: 0x9085e9 },
+    h100: { name: 'NVIDIA HGX H100' },
+    gb200: { name: 'NVIDIA GB200 NVL72' },
   };
+  /* Rack elevations drawn from manufacturer arrangements:
+     HGX H100 ships as 8U air cooled server chassis, a few per rack plus top of
+     rack switches; GB200 NVL72 is a rack scale stack of 1U compute trays and
+     1U NVLink switch trays fed by power shelves. Stacks read bottom up. */
+  var CHASSIS_TYPES = {
+    gpu8:     { name: 'HGX H100 GPU server', code: 'SRV', face: 'gpu8' },
+    compute:  { name: 'GB200 compute tray', code: 'CMP', face: 'compute' },
+    nvswitch: { name: 'NVLink switch tray', code: 'NVS', face: 'nvswitch' },
+    switch:   { name: 'Top of rack switch', code: 'NSW', face: 'switch' },
+    power:    { name: 'Power shelf', code: 'PWR', face: 'power' },
+    blank:    { name: 'Blanking panel', code: 'BLK', face: 'blank' },
+  };
+  function rackStack(gen, totalU) {
+    var s = [];
+    if (gen === 'h100') {
+      s.push({ t: 'power', u: 2 });
+      for (var i = 0; i < 4; i++) s.push({ t: 'gpu8', u: 8 });
+      s.push({ t: 'switch', u: 1 });
+      s.push({ t: 'switch', u: 1 });
+    } else {
+      for (var p = 0; p < 4; p++) s.push({ t: 'power', u: 1 });
+      for (var c1 = 0; c1 < 9; c1++) s.push({ t: 'compute', u: 1 });
+      for (var n = 0; n < 9; n++) s.push({ t: 'nvswitch', u: 1 });
+      for (var c2 = 0; c2 < 9; c2++) s.push({ t: 'compute', u: 1 });
+      for (var p2 = 0; p2 < 4; p2++) s.push({ t: 'power', u: 1 });
+    }
+    var used = s.reduce(function (a, x) { return a + x.u; }, 0);
+    if (totalU > used) s.push({ t: 'blank', u: totalU - used });
+    return s;
+  }
   var TURBINES = { francis: 'Francis runner', kaplan: 'Kaplan runner' };
   var HYDRO_OEMS = { voith: { name: 'Voith', color: 0xf8c953 }, andritz: { name: 'Andritz', color: 0x9cc4e0 } };
 
@@ -435,6 +467,10 @@
       document.getElementById('demo-fallback').style.display = 'flex';
       document.getElementById('demo-canvas').style.display = 'none';
     }
+    document.getElementById('pick-close').addEventListener('click', function () {
+      if (window.__clearPick) window.__clearPick();
+      else document.getElementById('pick-card').classList.remove('open');
+    });
     initTutorial();
   }
 
@@ -539,7 +575,7 @@
     } else {
       html =
         '<button class="act-btn" id="act-1" type="button"><b>Swap cabinet vendor</b><span>Vertiv VR to Rittal TS IT. Containment and busway re-fit, aisles hold clearance.</span></button>' +
-        '<button class="act-btn" id="act-2" type="button"><b>Swap the GPUs</b><span>HGX H100 to GB200 NVL. Numbering of every CPU, switch, and GPU preserved.</span></button>' +
+        '<button class="act-btn" id="act-2" type="button"><b>Swap the GPUs</b><span>HGX H100 to GB200 NVL72. Numbering of every CPU, switch, and GPU preserved.</span></button>' +
         '<button class="act-btn" id="act-3" type="button"><b>Toggle 2N cooling</b><span>Re-wire redundant power to the cooling units. A and B paths, live.</span></button>';
     }
     el.innerHTML = html;
@@ -620,6 +656,71 @@
   }
 
   /* ============================================================
+     ASSET IDENTIFICATION (click to identify, ISO 19650 style tags)
+     ============================================================ */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function assetTag(a) {
+    var zone = a.zone || 'DH1';
+    var parts = ['HUT8', a.site, zone];
+    if (a.cab) parts.push(a.cab);
+    parts.push(a.code + (a.feed ? '-' + a.feed : ''));
+    if (a.rack) parts.push('U' + pad2(a.uStart));
+    else if (a.id != null && !a.feed) parts.push(String(a.id));
+    return parts.join('-');
+  }
+  function elevationSVG(v, gen, hlUStart) {
+    var stack = rackStack(gen, v.u);
+    var H = 190, W = 132, top = 4, left = 34, bw = 88;
+    var s = (H - 8) / v.u;
+    var colors = { gpu8: '#2f7a5c', compute: '#2f7a5c', nvswitch: '#5d55a8', switch: '#3d6f92', power: '#6e4a26', blank: '#111a2c' };
+    var out = ['<svg viewBox="0 0 ' + W + ' ' + (H + 16) + '" width="' + W + '" role="img" aria-label="Cabinet elevation">'];
+    out.push('<rect x="' + (left - 3) + '" y="' + (top - 3) + '" width="' + (bw + 6) + '" height="' + (H - 8 + 6) + '" rx="4" fill="none" stroke="#1d3a5c" stroke-width="1.5"/>');
+    var uCursor = 1;
+    stack.forEach(function (item) {
+      var y = top + (H - 8) - (uCursor - 1 + item.u) * s;
+      var hl = hlUStart === uCursor;
+      out.push('<rect x="' + left + '" y="' + y.toFixed(1) + '" width="' + bw + '" height="' + Math.max(1.5, item.u * s - 1).toFixed(1) + '" rx="1.5" fill="' + (hl ? '#f9552f' : colors[item.t]) + '"' + (hl ? ' stroke="#f8c953" stroke-width="1.5"' : '') + '/>');
+      uCursor += item.u;
+    });
+    for (var u = 6; u <= v.u; u += 6) {
+      var ty = top + (H - 8) - u * s + 3;
+      out.push('<text x="' + (left - 6) + '" y="' + ty.toFixed(1) + '" text-anchor="end" font-size="7.5" fill="#67789a">U' + u + '</text>');
+    }
+    out.push('<text x="' + (left + bw / 2) + '" y="' + (H + 10) + '" text-anchor="middle" font-size="8.5" fill="#a9b6c9">' + v.name + ' · ' + GPUS[gen].name + '</text>');
+    out.push('</svg>');
+    return out.join('');
+  }
+  function renderPickCard(a) {
+    var card = document.getElementById('pick-card');
+    var body = document.getElementById('pick-body');
+    var v = VENDORS[demoState.vendor];
+    var rows = [];
+    if (a.rack) {
+      rows.push(['Cabinet', a.cab]);
+      rows.push(['Position', 'U' + a.uStart + (a.uHeight > 1 ? ' to U' + (a.uStart + a.uHeight - 1) : '')]);
+      rows.push(['Height', a.uHeight + 'U']);
+      if (a.typeKey === 'gpu8' || a.typeKey === 'compute' || a.typeKey === 'nvswitch') rows.push(['Platform', GPUS[demoState.gpu].name]);
+    } else if (a.cabinet) {
+      rows.push(['Make', a.make]);
+      rows.push(['Rack units', a.u + 'U']);
+    } else {
+      if (a.feed) rows.push(['Feed', a.feed]);
+      if (a.id != null && !a.feed) rows.push(['Unit', String(a.id)]);
+      if (a.rating) rows.push(['Rating', a.rating]);
+    }
+    var cat = a.rack ? 'Rack mounted equipment' : a.cabinet ? 'Cabinet' : (a.site === 'HYD' ? 'Plant asset' : 'Distribution');
+    var html = '<div class="pc-kind">' + cat + '</div><h4>' + a.kind + '</h4>' +
+      '<div class="pc-tag"><span class="lbl">Asset tag · ISO 19650</span>' + assetTag(a) + '</div>' +
+      rows.map(function (r) { return '<div class="pc-row"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('');
+    if (a.rack || a.cabinet) {
+      html += '<div class="pc-elev">' + elevationSVG(v, demoState.gpu, a.rack ? a.uStart : -1) + '</div>';
+    }
+    html += '<div class="pc-note">One ID for life: this same tag lives in the model, on the physical label, and in the sensor feed. That is the whole ISO 19650 story, minus the ceremony.</div>';
+    body.innerHTML = html;
+    card.classList.add('open');
+  }
+
+  /* ============================================================
      DEMO 3D
      ============================================================ */
   var applyScene = function () { refreshDemoJson(); };
@@ -636,6 +737,46 @@
     var scenes = {};
     var current = null;
 
+    /* click to identify: raycast pick with a light gold outline */
+    var ray = new THREE.Raycaster();
+    var pickSel = null;
+    function clearPick() {
+      if (pickSel) { pickSel.scene.remove(pickSel.helper); pickSel = null; }
+      document.getElementById('pick-card').classList.remove('open');
+    }
+    window.__clearPick = clearPick;
+    function doPick(e) {
+      if (!current) return;
+      var r = canvas.getBoundingClientRect();
+      var ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      var hits = ray.intersectObjects(current.scene.children, true);
+      for (var i = 0; i < hits.length; i++) {
+        var o = hits[i].object;
+        if (!o.visible || o.isSprite || o.isGridHelper) continue;
+        var node = o, a = null;
+        while (node) {
+          if (node.userData && node.userData.asset) { a = node.userData.asset; break; }
+          node = node.parent;
+        }
+        if (a) {
+          clearPick();
+          var helper = new THREE.BoxHelper(o, 0xf8c953);
+          current.scene.add(helper);
+          pickSel = { scene: current.scene, helper: helper };
+          renderPickCard(a);
+          refreshDemoJson('selected ' + assetTag(a));
+          return;
+        }
+      }
+      clearPick();
+    }
+    var pickDownX = 0, pickDownY = 0;
+    canvas.addEventListener('pointerdown', function (e) { pickDownX = e.clientX; pickDownY = e.clientY; });
+    canvas.addEventListener('pointerup', function (e) {
+      if (Math.hypot(e.clientX - pickDownX, e.clientY - pickDownY) < 7) doPick(e);
+    });
+
     function baseScene(bg) {
       var scene = new THREE.Scene();
       scene.background = new THREE.Color(bg || 0x070c18);
@@ -646,67 +787,156 @@
       return scene;
     }
 
+    /* -------- chassis faceplates: fine detail drawn as texture, no heavy lines -------- */
+    var faceTexCache = {};
+    function faceplateTexture(face, uH) {
+      var key = face + '_' + uH;
+      if (faceTexCache[key]) return faceTexCache[key];
+      var W = 256, H = Math.max(22, Math.round(uH * 22));
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var x = cv.getContext('2d');
+      x.fillStyle = face === 'blank' ? '#10182a' : '#161f30'; x.fillRect(0, 0, W, H);
+      /* mounting ears */
+      x.fillStyle = '#0c1322'; x.fillRect(0, 0, 10, H); x.fillRect(W - 10, 0, 10, H);
+      function vents(y0, y1, step) {
+        x.fillStyle = 'rgba(0,0,0,0.5)';
+        for (var y = y0; y < y1; y += step) x.fillRect(18, y, W - 36, 1.5);
+      }
+      function led(px, py, col) { x.fillStyle = col; x.fillRect(px, py, 3, 3); }
+      if (face === 'gpu8') {
+        vents(6, H - 16, 5);
+        /* eight GPU bay indicators along the lower edge, per HGX drawings */
+        for (var g8 = 0; g8 < 8; g8++) {
+          x.fillStyle = '#0b1120'; x.fillRect(20 + g8 * 28, H - 13, 22, 8);
+          led(22 + g8 * 28, H - 11, '#3fd08a');
+        }
+        led(W - 20, 5, '#3fd08a'); led(W - 26, 5, '#f8c953');
+      } else if (face === 'compute') {
+        vents(4, H - 6, 4);
+        x.fillStyle = '#7a5a2a'; x.fillRect(W - 46, 4, 28, H - 8); /* copper cold plate hint */
+        led(14, 5, '#3fd08a');
+      } else if (face === 'nvswitch') {
+        vents(4, H - 6, 4);
+        x.fillStyle = '#5d55a8'; x.fillRect(18, Math.round(H / 2) - 2, W - 60, 3);
+        led(14, 5, '#9085e9');
+      } else if (face === 'switch') {
+        x.fillStyle = '#0b1120';
+        for (var pt = 0; pt < 12; pt++) {
+          x.fillRect(20 + pt * 18, 5, 12, 7);
+          if (pt % 3 === 0) led(24 + pt * 18, 14, '#3fd08a');
+        }
+      } else if (face === 'power') {
+        vents(4, H - 4, 3);
+        x.fillStyle = '#233246'; x.fillRect(16, 3, 34, H - 6); x.fillRect(W - 50, 3, 34, H - 6);
+        led(56, 5, '#f8c953');
+      }
+      var tex = new THREE.CanvasTexture(cv);
+      faceTexCache[key] = tex;
+      return tex;
+    }
+
+    /* -------- cabinet with true U-pitch equipment layout -------- */
     function makeCabinet(num, podColor) {
       var g = new THREE.Group();
-      var parts = { plinth: null, frame: null, door: null, sides: [], top: null, shelves: [], modules: [], pduA: null, pduB: null, dropA: null, dropB: null, sprite: null };
-      parts.plinth = box(1, 1, 1, mat(0x0d1626, { rough: 0.7 })); g.add(parts.plinth);
-      parts.frame = box(1, 1, 1, mat(0x1e2c40, { rough: 0.5, metal: 0.5 })); g.add(parts.frame);
-      var doorMat = new THREE.MeshStandardMaterial({ map: perfTexture(6, '#26364e'), roughness: 0.6, metalness: 0.4 });
-      parts.door = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), doorMat); g.add(parts.door);
-      for (var s = 0; s < 2; s++) {
-        var side = box(1, 1, 1, mat(0x16223a, { rough: 0.6 })); g.add(side); parts.sides.push(side);
-      }
-      parts.top = box(1, 1, 1, mat(0x27395a, { rough: 0.5, metal: 0.5 })); g.add(parts.top);
-      for (var u = 0; u < 4; u++) {
-        var shelf = box(1, 1, 1, mat(0x0b1322, { rough: 0.7 })); g.add(shelf); parts.shelves.push(shelf);
-        var rowMods = [];
-        for (var m = 0; m < 4; m++) {
-          var mod = box(1, 1, 1, mat(0x3fd08a, { rough: 0.35, metal: 0.2, emissive: 0x3fd08a, ei: 0.55 }));
-          g.add(mod); rowMods.push(mod);
-        }
-        parts.modules.push(rowMods);
-      }
-      parts.pduA = box(1, 1, 1, mat(C.berryBright, { emissive: C.berryBright, ei: 0.4 })); g.add(parts.pduA);
-      parts.pduB = box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.4 })); g.add(parts.pduB);
-      parts.dropA = box(1, 1, 1, mat(C.berryBright, { emissive: C.berryBright, ei: 0.5 })); g.add(parts.dropA);
-      parts.dropB = box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.5 })); g.add(parts.dropB);
-      parts.sprite = labelSprite(num, podColor, 0.8); g.add(parts.sprite);
+      var shellMat = mat(0x1e2c40, { rough: 0.5, metal: 0.5 });
+      var parts = {
+        num: num,
+        plinth: box(1, 1, 1, mat(0x0d1626, { rough: 0.7 })),
+        sides: [box(1, 1, 1, mat(0x16223a, { rough: 0.6 })), box(1, 1, 1, mat(0x16223a, { rough: 0.6 }))],
+        top: box(1, 1, 1, shellMat),
+        rear: new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: perfTexture(6, '#26364e'), roughness: 0.6, metalness: 0.4 })),
+        posts: [box(1, 1, 1, shellMat), box(1, 1, 1, shellMat)],
+        rails: [box(1, 1, 1, mat(0x8b96a8, { metal: 0.8, rough: 0.35 })), box(1, 1, 1, mat(0x8b96a8, { metal: 0.8, rough: 0.35 }))],
+        pduA: box(1, 1, 1, mat(C.berryBright, { emissive: C.berryBright, ei: 0.3 })),
+        pduB: box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.3 })),
+        dropA: box(1, 1, 1, mat(C.berryBright, { emissive: C.berryBright, ei: 0.5 })),
+        dropB: box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.5 })),
+        sprite: labelSprite(num, podColor, 0.8),
+        equip: new THREE.Group(),
+        equipKey: '',
+      };
+      Object.keys(parts).forEach(function (k) {
+        var v = parts[k];
+        if (v && v.isObject3D) g.add(v);
+        if (Array.isArray(v)) v.forEach(function (m) { g.add(m); });
+      });
       g.userData = parts;
       return g;
     }
 
-    function layoutCabinet(g, v, gpu, n2, buswayY) {
+    function buildEquip(g, v, gen, siteCode) {
+      var p = g.userData;
+      var key = v.name + '|' + gen;
+      if (p.equipKey === key) return;
+      p.equipKey = key;
+      while (p.equip.children.length) p.equip.remove(p.equip.children[0]);
+      var h = v.h, w = v.w, d = v.d;
+      var y0 = 0.09 + 0.07;               /* plinth + bottom margin */
+      var uPitch = (h - 0.15) / v.u;
+      var stack = rackStack(gen, v.u);
+      var uCursor = 1;
+      stack.forEach(function (item) {
+        var meta = CHASSIS_TYPES[item.t];
+        var ch = item.u * uPitch;
+        var yC = y0 + (uCursor - 1) * uPitch + ch / 2;
+        var body = box(w * 0.86, ch * 0.94, d * 0.7, mat(item.t === 'blank' ? 0x10182a : 0x131c2c, { rough: 0.55, metal: 0.4 }));
+        body.position.set(0, yC, -d * 0.06);
+        var face = new THREE.Mesh(
+          new THREE.PlaneGeometry(w * 0.86, ch * 0.9),
+          new THREE.MeshBasicMaterial({ map: faceplateTexture(meta.face, item.u) })
+        );
+        face.position.set(0, yC, d / 2 - 0.055);
+        var asset = {
+          kind: meta.name,
+          typeKey: item.t,
+          code: meta.code,
+          cab: p.num,
+          uStart: uCursor,
+          uHeight: item.u,
+          site: siteCode,
+          rack: true,
+        };
+        body.userData.asset = asset;
+        face.userData.asset = asset;
+        p.equip.add(body); p.equip.add(face);
+        uCursor += item.u;
+      });
+    }
+
+    function layoutCabinet(g, v, gen, n2, buswayY, siteCode) {
       var p = g.userData;
       var w = v.w, h = v.h, d = v.d;
       p.plinth.scale.set(w, 0.09, d); p.plinth.position.y = 0.045;
-      p.frame.scale.set(w, h, d); p.frame.position.y = 0.09 + h / 2;
-      p.frame.material.color.setHex(v.frame);
-      p.door.scale.set(w * 0.94, h * 0.94, 1); p.door.position.set(0, 0.09 + h / 2, d / 2 + 0.006);
-      p.door.material.map = perfTexture(v.perf, v.door);
-      p.door.material.needsUpdate = true;
       p.sides.forEach(function (s, i) {
-        s.scale.set(0.02, h * 0.96, d * 0.96);
-        s.position.set((i ? 1 : -1) * (w / 2 + 0.011), 0.09 + h / 2, 0);
+        s.scale.set(0.025, h, d);
+        s.position.set((i ? 1 : -1) * (w / 2 - 0.012), 0.09 + h / 2, 0);
       });
-      p.top.scale.set(w * 0.9, 0.06, d * 0.5); p.top.position.set(0, 0.09 + h + 0.03, -d * 0.15);
-      var gpuCol = GPUS[gpu].color;
-      p.shelves.forEach(function (s, u) {
-        s.scale.set(w * 0.82, 0.05, d * 0.7);
-        var y = 0.32 + u * h * 0.2;
-        s.position.set(0, y, d * 0.08);
-        p.modules[u].forEach(function (m, k) {
-          m.scale.set(w * 0.17, h * 0.1, 0.05);
-          m.position.set(-w * 0.31 + k * w * 0.207, y + h * 0.075, d / 2 + 0.035);
-          m.material.color.setHex(gpuCol); m.material.emissive.setHex(gpuCol);
-        });
+      p.top.scale.set(w, 0.05, d); p.top.position.set(0, 0.09 + h + 0.025, 0);
+      p.rear.scale.set(w * 0.94, h * 0.94, 1); p.rear.position.set(0, 0.09 + h / 2, -d / 2 + 0.006);
+      p.rear.rotation.y = Math.PI;
+      p.posts.forEach(function (po, i) {
+        po.scale.set(0.05, h, 0.05);
+        po.position.set((i ? 1 : -1) * (w / 2 - 0.03), 0.09 + h / 2, d / 2 - 0.03);
       });
-      p.pduA.scale.set(0.05, h * 0.85, 0.05); p.pduA.position.set(-w * 0.32, 0.09 + h / 2, -d / 2 + 0.05);
-      p.pduB.scale.set(0.05, h * 0.85, 0.05); p.pduB.position.set(w * 0.32, 0.09 + h / 2, -d / 2 + 0.05);
+      p.rails.forEach(function (r, i) {
+        r.scale.set(0.018, h * 0.93, 0.018);
+        r.position.set((i ? 1 : -1) * (w * 0.44), 0.09 + h / 2, d / 2 - 0.07);
+      });
+      buildEquip(g, v, gen, siteCode);
+      var cabAsset = { kind: 'Rack cabinet', typeKey: 'cab', code: 'CAB', cab: p.num, site: siteCode, make: v.name, u: v.u, rack: false, cabinet: true };
+      p.sides[0].userData.asset = cabAsset; p.sides[1].userData.asset = cabAsset;
+      p.top.userData.asset = cabAsset; p.rear.userData.asset = cabAsset; p.plinth.userData.asset = cabAsset;
+      p.pduA.scale.set(0.035, h * 0.9, 0.05); p.pduA.position.set(-w * 0.36, 0.09 + h / 2, -d / 2 + 0.09);
+      p.pduB.scale.set(0.035, h * 0.9, 0.05); p.pduB.position.set(w * 0.36, 0.09 + h / 2, -d / 2 + 0.09);
+      p.pduA.userData.asset = { kind: 'Rack PDU, feed A', typeKey: 'pdu', code: 'PDU', cab: p.num, site: siteCode, feed: 'A' };
+      p.pduB.userData.asset = { kind: 'Rack PDU, feed B', typeKey: 'pdu', code: 'PDU', cab: p.num, site: siteCode, feed: 'B' };
       p.pduB.visible = n2;
-      /* busway drops from overhead feed down to cabinet top */
       var dropH = Math.max(0.15, buswayY - (h + 0.12));
-      p.dropA.scale.set(0.045, dropH, 0.045); p.dropA.position.set(-w * 0.25, h + 0.12 + dropH / 2, -d * 0.2);
-      p.dropB.scale.set(0.045, dropH, 0.045); p.dropB.position.set(w * 0.25, h + 0.12 + dropH / 2, -d * 0.2);
+      p.dropA.scale.set(0.04, dropH, 0.04); p.dropA.position.set(-w * 0.25, h + 0.12 + dropH / 2, -d * 0.2);
+      p.dropB.scale.set(0.04, dropH, 0.04); p.dropB.position.set(w * 0.25, h + 0.12 + dropH / 2, -d * 0.2);
+      p.dropA.userData.asset = { kind: 'Busway drop, feed A', typeKey: 'drop', code: 'BWD', cab: p.num, site: siteCode, feed: 'A' };
+      p.dropB.userData.asset = { kind: 'Busway drop, feed B', typeKey: 'drop', code: 'BWD', cab: p.num, site: siteCode, feed: 'B' };
       p.dropB.visible = n2;
       p.sprite.position.set(0, h + 0.55, 0);
     }
@@ -762,6 +992,7 @@
           pf.add(l1); pf.add(l2); pf.add(l3);
           var sp = labelSprite('POD ' + (ri * nPods + pp + 1), '#f8c953', 0.7);
           pf.add(sp);
+          pf.userData.asset = { kind: 'Containment pod frame', typeKey: 'pod', code: 'POD', id: ri * nPods + pp + 1, site: cfg.code };
           scene.add(pf);
           podFrames.push({ g: pf, posts: [l1, l2], header: l3, sprite: sp, row: ri, pod: pp });
         }
@@ -771,11 +1002,13 @@
       var hotVols = [];
       for (var cp = 0; cp < rowsZ.length - 1; cp++) {
         var hv = box(1, 1, 1, new THREE.MeshStandardMaterial({ color: C.orange, transparent: true, opacity: 0.16, roughness: 0.5 }));
+        hv.userData.asset = { kind: 'Hot aisle containment', typeKey: 'hac', code: 'HAC', id: cp + 1, site: cfg.code };
         scene.add(hv); hotVols.push(hv);
       }
       var coldStrips = [];
       rowsZ.forEach(function (rz, ri) {
         var cs = box(1, 0.04, 1, new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.30, roughness: 0.4 }));
+        cs.userData.asset = { kind: 'Cold aisle', typeKey: 'cac', code: 'CAC', id: ri + 1, site: cfg.code };
         scene.add(cs); coldStrips.push(cs);
       });
 
@@ -790,11 +1023,17 @@
         buswayA: box(hallW - 0.6, 0.12, 0.2, mat(C.berryBright, { emissive: C.berryBright, ei: 0.4 })),
         buswayB: box(hallW - 0.6, 0.12, 0.2, mat(C.violet, { emissive: C.violet, ei: 0.4 })),
       };
+      sys.chwS.userData.asset = { kind: 'Chilled water supply main', typeKey: 'chw', code: 'CHWS', site: cfg.code };
+      sys.chwR.userData.asset = { kind: 'Chilled water return main', typeKey: 'chw', code: 'CHWR', site: cfg.code };
+      sys.buswayA.userData.asset = { kind: 'Overhead busway, feed A', typeKey: 'bus', code: 'BUS', id: 'A', site: cfg.code };
+      sys.buswayB.userData.asset = { kind: 'Overhead busway, feed B', typeKey: 'bus', code: 'BUS', id: 'B', site: cfg.code };
       scene.add(sys.buswayA); scene.add(sys.buswayB);
       /* cable trays: full width + vertical wall drops at both ends */
-      rowsZ.forEach(function (rz) {
+      rowsZ.forEach(function (rz, trI) {
         var tm = mat(C.trayGray, { rough: 0.4, metal: 0.7 });
+        var trayAsset = { kind: 'Cable tray run', typeKey: 'tray', code: 'TRAY', id: 'R' + (trI + 1), site: cfg.code };
         var rail1 = box(hallW - 0.6, 0.04, 0.04, tm), rail2 = box(hallW - 0.6, 0.04, 0.04, tm);
+        rail1.userData.asset = trayAsset; rail2.userData.asset = trayAsset;
         rail1.position.set(0, 3.0, rz - 0.2); rail2.position.set(0, 3.0, rz + 0.2);
         scene.add(rail1); scene.add(rail2);
         for (var x = -hallW / 2 + 0.7; x < hallW / 2 - 0.4; x += 0.55) {
@@ -809,19 +1048,20 @@
       });
 
       /* CRAH units with CHW connections */
-      function crah(x, z, col) {
+      function crah(x, z, col, id) {
         var g = new THREE.Group();
         var body = box(1.3, 2.2, 0.9, mat(0x1a2b46, { rough: 0.4, metal: 0.5, emissive: col, ei: 0.15 }));
         body.position.y = 1.1; g.add(body);
         var grille = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.6), new THREE.MeshStandardMaterial({ map: perfTexture(5, '#132036'), roughness: 0.7 }));
         grille.position.set(0, 1.15, 0.46); g.add(grille);
         g.position.set(x, 0, z);
+        g.userData.asset = { kind: 'CRAH cooling unit', typeKey: 'crah', code: 'CRAH', id: id, site: cfg.code };
         scene.add(g); return g;
       }
       var crahA = [], crahB = [], chwDrops = [];
-      [rowsZ[0], rowsZ[rowsZ.length - 1]].forEach(function (rz) {
-        crahA.push(crah(-cfg.span - 1.6, rz, C.berryBright));
-        crahB.push(crah(cfg.span + 1.6, rz, C.violet));
+      [rowsZ[0], rowsZ[rowsZ.length - 1]].forEach(function (rz, cri) {
+        crahA.push(crah(-cfg.span - 1.6, rz, C.berryBright, 'A' + (cri + 1)));
+        crahB.push(crah(cfg.span + 1.6, rz, C.violet, 'B' + (cri + 1)));
         /* CHW elbow drops from mains to each CRAH */
         var dA = tube([new THREE.Vector3(-cfg.span - 1.6, 3.5, 0), new THREE.Vector3(-cfg.span - 1.6, 3.5, rz * 0.6), new THREE.Vector3(-cfg.span - 1.6, 2.3, rz)], 0.06, mat(C.blue, { emissive: C.blue, ei: 0.5 }), 16);
         var dB = tube([new THREE.Vector3(cfg.span + 1.6, 3.5, 0.32), new THREE.Vector3(cfg.span + 1.6, 3.5, rz * 0.6), new THREE.Vector3(cfg.span + 1.6, 2.3, rz)], 0.05, mat(C.blueLight, { emissive: C.blueLight, ei: 0.5 }), 16);
@@ -830,6 +1070,7 @@
       });
 
       var manifolds = new THREE.Group();
+      manifolds.userData.asset = { kind: 'Liquid cooling manifold', typeKey: 'lcm', code: 'LCM', site: cfg.code };
       if (cfg.liquid) {
         rowsZ.forEach(function (rz) {
           manifolds.add(tube([new THREE.Vector3(-cfg.span, 0.35, rz + 0.78), new THREE.Vector3(cfg.span, 0.35, rz + 0.78)], 0.05, mat(C.blue, { emissive: C.blue, ei: 0.5 }), 8));
@@ -845,7 +1086,7 @@
         var buswayY = v.h + 1.0;
         cabs.forEach(function (c) {
           c.g.position.set(-span / 2 + c.i * pitch, 0, rowsZ[c.row]);
-          layoutCabinet(c.g, v, gpuKey, n2, buswayY);
+          layoutCabinet(c.g, v, gpuKey, n2, buswayY, cfg.code);
         });
         podFrames.forEach(function (pf) {
           var startI = pf.pod * podSize;
@@ -922,7 +1163,11 @@
         scene.add(m); return m;
       }
       pens.push(penstock(-4), penstock(0), penstock(4));
+      pens.forEach(function (pm, pi) {
+        pm.userData.asset = { kind: 'Penstock', typeKey: 'pen', code: 'PEN', id: pi + 1, site: 'HYD', zone: 'PH' };
+      });
       var penN1 = penstock(7.2, true); penN1.visible = false;
+      penN1.userData.asset = { kind: 'Penstock, N+1 redundant', typeKey: 'pen', code: 'PEN', id: 4, site: 'HYD', zone: 'PH' };
 
       /* powerhouse: slab, columns, low ribbed walls, translucent upper */
       var slab2 = box(10.5, 0.4, 16, concDark); slab2.position.set(7.5, -2.1, 0); scene.add(slab2);
@@ -940,7 +1185,10 @@
           scene.add(colm);
         });
       }
-      var crane = box(9.6, 0.25, 0.5, mat(C.berryBright, { emissive: C.berryBright, ei: 0.2 })); crane.position.set(7.5, 4.1, 0); scene.add(crane);
+      var crane = box(9.6, 0.25, 0.5, mat(C.berryBright, { emissive: C.berryBright, ei: 0.2 })); crane.position.set(7.5, 4.1, 0);
+      crane.userData.asset = { kind: 'Turbine hall bridge crane', typeKey: 'crane', code: 'CRN', id: 1, site: 'HYD', zone: 'PH' };
+      scene.add(crane);
+      dam.userData.asset = { kind: 'Concrete gravity dam', typeKey: 'dam', code: 'DAM', site: 'HYD', zone: 'CIV' };
 
       var units = [];
       [-4, 0, 4].forEach(function (z, ui) {
@@ -967,6 +1215,7 @@
         u.add(draft);
         var sp = labelSprite('U' + (ui + 1), '#f8c953', 0.8); sp.position.set(0, 3.1, 0); u.add(sp);
         u.position.set(6.2, 0, z);
+        u.userData.asset = { kind: 'Turbine generator unit', typeKey: 'gen', code: 'GEN', id: 'U' + (ui + 1), site: 'HYD', zone: 'PH', rating: '54 MW' };
         scene.add(u);
         units.push({ g: u, gen: gen, spinner: spinner, runnerF: runnerF, runnerK: runnerK });
       });
@@ -986,7 +1235,9 @@
           b2.position.set(-0.25 + bsh * 0.35, 1.4, 0); t.add(b2);
         }
         t.scale.set(1.4, 1.4, 1.4);
-        t.position.set(12.6, -2, z); scene.add(t);
+        t.position.set(12.6, -2, z);
+        t.userData.asset = { kind: 'Generator step-up transformer', typeKey: 'tx', code: 'TX', id: 'T' + (z / 4 + 2), site: 'HYD', zone: 'SY' };
+        scene.add(t);
       });
       for (var py = 0; py < 2; py++) {
         var pylon = new THREE.Group();
@@ -1022,8 +1273,8 @@
     function getScene(id) {
       if (scenes[id]) return scenes[id];
       var s;
-      if (id === 'vega') s = buildDC({ rowsZ: [-1.9, 1.9], perRow: 6, span: 4.6, radius: 17, liquid: false });
-      else if (id === 'beacon') s = buildDC({ rowsZ: [-3.4, 0, 3.4], perRow: 7, span: 5.2, radius: 21, liquid: true });
+      if (id === 'vega') s = buildDC({ rowsZ: [-1.9, 1.9], perRow: 6, span: 4.6, radius: 17, liquid: false, code: 'VEG' });
+      else if (id === 'beacon') s = buildDC({ rowsZ: [-3.4, 0, 3.4], perRow: 7, span: 5.2, radius: 21, liquid: true, code: 'BPT' });
       else s = buildHydro();
       scenes[id] = s;
       return s;
@@ -1031,6 +1282,7 @@
     getSceneRef = getScene;
 
     window.__setScene = function (id) {
+      clearPick();
       current = getScene(id);
       current.apply(demoState);
       orbit.radius = current.radius;
@@ -1039,7 +1291,7 @@
       orbit.rMax = current.radius * 2.5;
       orbit.user = false;
     };
-    applyScene = function () { if (current) current.apply(demoState); refreshDemoJson(); };
+    applyScene = function () { clearPick(); if (current) current.apply(demoState); refreshDemoJson(); };
     window.__demoResize = function () { fitRenderer(renderer, camera, stage); };
     window.__setScene(demoState.site);
 
@@ -1095,7 +1347,7 @@
 
     var STEPS = [
       { target: '#demo-stage', title: 'Welcome to Yurt 8', text: 'This is the live demo of the tool. Sixty seconds, six stops, and then it is all yours. Hit Next.', full: true },
-      { target: '#demo-stage', title: 'The site, in 3D', text: 'Drag anywhere to orbit the site. Scroll or pinch to zoom. The model keeps moving on its own until you grab it.', full: true },
+      { target: '#demo-stage', title: 'The site, in 3D', text: 'Drag anywhere to orbit. Scroll or pinch to zoom. And click any piece of equipment, a GPU server, a power shelf, a penstock, to identify it and pull its lifetime asset tag.', full: true },
       { target: '.mini-tracker', title: 'The pizza tracker', text: 'Every project moves along this tracker, stage by stage, like a pizza order. This one is parked at Fit-out: racks, power, and cooling going in.' },
       { target: '#hud-sites', title: 'The portfolio', text: 'This menu holds the sites. Two data centers and a hydro station. Pick one and the whole scene, the money, and the clash feed swap with it.', open: 'sites' },
       { target: '#hud-generate', title: 'Generate, live', text: 'These buttons run real design moves: swap cabinet vendors, swap GPUs, toggle redundant cooling. Watch the model re-fit itself and keep every asset number.', open: 'generate' },

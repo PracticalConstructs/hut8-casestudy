@@ -104,3 +104,17 @@ F. **The pizza tracker lives in the demo now** (pinned to Fit-out per your spec)
     stated as estimates in the deliverable.
 12. **Public hosting safety.** Nothing confidential in the HTML: no prior employer
     material, no non-public Hut 8 data, only public figures with sources.
+
+## Night pass (rack realism and asset tagging, August 1)
+
+L. **Rack internals follow manufacturer arrangements.** HGX H100 racks carry four
+   8U server chassis plus two top of rack switches over a power shelf; GB200 NVL72
+   racks carry the rack scale stack of 1U compute trays, an NVLink switch band, and
+   power shelves. Cabinet heights corrected to real proportions (42U at about 2.0m,
+   48U at about 2.27m). Faceplate detail is drawn as fine texture, no heavy lines.
+M. **Click to identify.** Every piece of equipment in the demo (chassis, PDUs,
+   busways, CRAHs, containment, trays, turbines, penstocks, transformers, the dam)
+   carries an ISO 19650 style asset tag like HUT8-VEG-DH1-C04-SRV-U11. Clicking
+   shows the tag, key parameters, and a cabinet elevation with the selected unit
+   highlighted. Tag structure is illustrative; the real naming convention gets
+   agreed with Hut 8 in month one.
