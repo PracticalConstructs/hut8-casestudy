@@ -94,8 +94,8 @@ Three savings components:
 
 Verdict adopted in the deliverables: the $4M / $10M claims sit between conservative
 and base, so they are pitched as the conservative case with the base math shown
-($8M to $16M year 1 on the same benchmarks). ROI at the $2.2M floor is still ~6x the
-$350K ask; the DBIA precedent ($200K VDC spend returning $2.5M+) independently
+($8M to $16M year 1 on the same benchmarks). ROI at the $2.2M floor is still ~5x the
+$450K ask; the DBIA precedent ($200K VDC spend returning $2.5M+) independently
 supports the floor. Caveats carried into the copy: Tier 1 partners already run BIM
 (owner side residual only); some savings accrue inside non recourse project SPVs;
 schedule value is carry avoidance and risk reduction.

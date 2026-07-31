@@ -20,7 +20,7 @@ Three ways in, depending on how much time the team has:
    source.
 
 The short version: Yurt 8 is one system that watches every project, generates the
-next design move, and learns from both. Year one costs about $350K all in and
+next design move, and learns from both. Year one costs about $450K all in and
 conservatively returns $4M against the 830 MW Hut 8 has under construction right
 now. The math is deliberately conservative and every figure traces to a public
 source. I also show exactly how I built this, including the AI agents I directed to
