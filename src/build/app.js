@@ -1,4 +1,4 @@
-/* Yurt 8 demo application. Two views: landing + demo tool. Fully offline. */
+/* Yurt 8 demo application v3. Three views: landing, detailed summary, demo tool. Offline. */
 (function () {
   'use strict';
   var THREE = window.THREE;
@@ -6,39 +6,42 @@
 
   var MONEY = {{MONEY_JSON}};
 
-  /* ============================================================
-     PALETTE (matches CSS)
-     ============================================================ */
+  /* palette */
   var C = {
-    leaf: 0x8fbe6e, fern: 0x69a35e, mint: 0xcde8cf, moss: 0x44705d,
-    rose: 0xe15b78, violet: 0x9085e9, sky: 0xa8d8ea, skyDeep: 0x7fc8e0,
-    blue: 0x3987e5, blueLight: 0x7fc8e0, steel: 0x39454f, frameDark: 0x232a2f,
-    concrete: 0x8a9088, water: 0x2e6fb5, trayGray: 0x9aa8a0
+    orange: 0xf9552f, orangeDeep: 0xe0561f, gold: 0xf8c953, berry: 0x780e36, berryBright: 0xd6336c,
+    steel: 0x0f3a5c, navy: 0x16384c, blue: 0x3987e5, blueLight: 0x7fc8e0, skylt: 0x9cc4e0,
+    violet: 0x9085e9, trayGray: 0x9aa8b5, concrete: 0x8a9088, water: 0x2e6fb5,
+    frame: 0x1b2b44, panelDark: 0x101c30
   };
 
   /* ============================================================
-     VIEW ROUTER
+     ROUTER: '', '#summary', '#demo'
      ============================================================ */
-  var landing = document.getElementById('view-landing');
-  var demo = document.getElementById('view-demo');
-  var demoStarted = false;
-  var demoActive = false;
-
-  function setView(isDemo) {
-    demoActive = isDemo;
-    landing.classList.toggle('active', !isDemo);
-    demo.classList.toggle('active', isDemo);
-    document.body.style.overflow = isDemo ? 'hidden' : '';
-    if (isDemo && !demoStarted) { demoStarted = true; initDemo(); }
-    if (isDemo && window.__demoResize) window.__demoResize();
+  var views = {
+    landing: document.getElementById('view-landing'),
+    summary: document.getElementById('view-summary'),
+    demo: document.getElementById('view-demo'),
+  };
+  var demoStarted = false, demoActive = false;
+  function setView(name) {
+    demoActive = name === 'demo';
+    Object.keys(views).forEach(function (k) { views[k].classList.toggle('active', k === name); });
+    document.body.style.overflow = demoActive ? 'hidden' : '';
+    if (demoActive && !demoStarted) { demoStarted = true; initDemo(); }
+    if (demoActive && window.__demoResize) window.__demoResize();
+    if (name !== 'demo' && window.__tutStop) window.__tutStop();
+    if (name === 'summary') window.scrollTo(0, 0);
   }
-  function route() { setView(location.hash === '#demo'); }
+  function route() {
+    setView(location.hash === '#demo' ? 'demo' : location.hash === '#summary' ? 'summary' : 'landing');
+  }
   window.addEventListener('hashchange', route);
   document.getElementById('btn-back').addEventListener('click', function () { location.hash = ''; });
+  document.getElementById('btn-back-sum').addEventListener('click', function () { location.hash = ''; });
   route();
 
   /* ============================================================
-     WEBGL SUPPORT + SHARED HELPERS
+     GL HELPERS
      ============================================================ */
   function webglOK() {
     try {
@@ -109,11 +112,11 @@
     var cv = document.createElement('canvas');
     cv.width = 160; cv.height = 64;
     var ctx = cv.getContext('2d');
-    ctx.fillStyle = 'rgba(10,15,11,0.85)';
+    ctx.fillStyle = 'rgba(8,16,32,0.85)';
     roundRect(ctx, 6, 10, 148, 44, 10); ctx.fill();
     ctx.strokeStyle = color; ctx.lineWidth = 3;
     roundRect(ctx, 6, 10, 148, 44, 10); ctx.stroke();
-    ctx.fillStyle = '#edf3ea';
+    ctx.fillStyle = '#f0f3f8';
     ctx.font = 'bold 24px system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(text, 80, 33);
@@ -129,10 +132,20 @@
     var ctx = cv.getContext('2d');
     ctx.fillStyle = tint; ctx.fillRect(0, 0, 64, 128);
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    var step = density;
-    for (var y = 4; y < 124; y += step) for (var x = 4; x < 60; x += step) {
-      ctx.beginPath(); ctx.arc(x, y, step * 0.26, 0, 6.3); ctx.fill();
+    for (var y = 4; y < 124; y += density) for (var x = 4; x < 60; x += density) {
+      ctx.beginPath(); ctx.arc(x, y, density * 0.26, 0, 6.3); ctx.fill();
     }
+    var tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+  function ribTexture(tint, ribColor) {
+    var cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 64;
+    var ctx = cv.getContext('2d');
+    ctx.fillStyle = tint; ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = ribColor;
+    for (var x = 0; x < 64; x += 16) ctx.fillRect(x, 0, 3, 64);
     var tex = new THREE.CanvasTexture(cv);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     return tex;
@@ -146,63 +159,76 @@
     return new THREE.MeshStandardMaterial({
       color: color, roughness: o.rough != null ? o.rough : 0.55, metalness: o.metal != null ? o.metal : 0.35,
       transparent: !!o.opacity, opacity: o.opacity || 1,
-      emissive: o.emissive || 0x000000, emissiveIntensity: o.ei || 0
+      emissive: o.emissive || 0x000000, emissiveIntensity: o.ei || 0,
+      side: o.double ? THREE.DoubleSide : THREE.FrontSide
     });
   }
   function box(w, h, d, material) { return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material); }
   function tube(pts, r, material, seg) {
-    var curve = new THREE.CatmullRomCurve3(pts);
-    return new THREE.Mesh(new THREE.TubeGeometry(curve, seg || 32, r, 8, false), material);
+    return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), seg || 32, r, 8, false), material);
   }
 
   /* ============================================================
-     LANDING HERO SCENE (re-colored assembly)
+     LANDING HERO: brighter, walls + columns, palette pop
      ============================================================ */
   if (canRender) (function heroScene() {
     var canvas = document.getElementById('hero-canvas');
     var hero = document.getElementById('hero');
     var renderer = makeRenderer(canvas);
     var scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0a0f0b, 30, 90);
+    scene.fog = new THREE.Fog(0x0a0716, 34, 95);
     var camera = new THREE.PerspectiveCamera(42, 2, 0.1, 200);
-    var orbit = { theta: 0.7, phi: 0.42, radius: 34, rMin: 18, rMax: 60, user: false };
+    var orbit = { theta: 0.7, phi: 0.42, radius: 33, rMin: 16, rMax: 60, user: false };
     addOrbit(canvas, orbit);
 
-    scene.add(new THREE.AmbientLight(0x9db8a2, 0.85));
-    var key = new THREE.DirectionalLight(0xfdf6e3, 1.35);
+    scene.add(new THREE.AmbientLight(0xbcc8de, 1.0));
+    var key = new THREE.DirectionalLight(0xfff2e0, 1.7);
     key.position.set(14, 22, 8); scene.add(key);
-    var leafPt = new THREE.PointLight(C.leaf, 55, 50); leafPt.position.set(0, 6, 0); scene.add(leafPt);
-    var skyPt = new THREE.PointLight(C.sky, 25, 40); skyPt.position.set(-8, 4, 8); scene.add(skyPt);
+    var warm = new THREE.PointLight(C.orange, 90, 55); warm.position.set(2, 6, 0); scene.add(warm);
+    var cool = new THREE.PointLight(C.blue, 45, 45); cool.position.set(-10, 5, 8); scene.add(cool);
+    var goldPt = new THREE.PointLight(C.gold, 40, 40); goldPt.position.set(10, 4, -6); scene.add(goldPt);
 
-    var grid = new THREE.GridHelper(120, 60, 0x22301f, 0x131a14);
+    var grid = new THREE.GridHelper(120, 60, 0x1d3a5c, 0x101a2e);
     grid.position.y = -0.01; scene.add(grid);
-    var slab = box(26, 0.3, 16, mat(0x0f1510, { rough: 0.9, metal: 0.1 }));
+    var slab = box(27, 0.3, 17, mat(0x0d1526, { rough: 0.85, metal: 0.1 }));
     slab.position.y = -0.15; scene.add(slab);
 
     var buildGroups = [];
     function addTimed(group, t0, t1) { scene.add(group); buildGroups.push({ g: group, t0: t0, t1: t1 }); }
 
+    /* structural columns + beams: thicker, brighter steel */
     var frame = new THREE.Group();
-    var colGeo = new THREE.BoxGeometry(0.35, 7, 0.35);
-    var colMat = mat(C.steel, { rough: 0.5, metal: 0.6 });
+    var colMat = mat(0x2a4468, { rough: 0.42, metal: 0.7 });
     for (var cx = -12; cx <= 12; cx += 6) for (var cz = -7; cz <= 7; cz += 7) {
-      var col = new THREE.Mesh(colGeo, colMat);
+      var col = box(0.5, 7, 0.5, colMat);
       col.position.set(cx, 3.5, cz); frame.add(col);
+      var cap = box(0.8, 0.18, 0.8, mat(C.gold, { emissive: C.gold, ei: 0.25, metal: 0.6 }));
+      cap.position.set(cx, 7.05, cz); frame.add(cap);
     }
     for (var bz = -7; bz <= 7; bz += 7) {
-      var beam = box(24.7, 0.3, 0.3, colMat); beam.position.set(0, 7, bz); frame.add(beam);
+      var beam = box(24.7, 0.35, 0.35, colMat); beam.position.set(0, 7, bz); frame.add(beam);
     }
     for (var bx = -12; bx <= 12; bx += 6) {
-      var beam2 = box(0.3, 0.3, 14.3, colMat); beam2.position.set(bx, 7, 0); frame.add(beam2);
+      var beam2 = box(0.35, 0.35, 14.3, colMat); beam2.position.set(bx, 7, 0); frame.add(beam2);
     }
-    addTimed(frame, 0.04, 0.22);
+    addTimed(frame, 0.04, 0.2);
 
-    var shell = box(25.4, 7.2, 14.8, new THREE.MeshStandardMaterial({ color: 0x18231a, transparent: true, opacity: 0.16, roughness: 0.3, metalness: 0.2, side: THREE.DoubleSide }));
-    shell.position.y = 3.6;
-    addTimed(shell, 0.2, 0.34);
+    /* perimeter walls with ribbed panels, one long side left open to see inside */
+    var wallGroup = new THREE.Group();
+    var wallMat = new THREE.MeshStandardMaterial({ map: ribTexture('#12233c', '#1d3a5c'), roughness: 0.6, metalness: 0.35 });
+    var wallBack = box(25.6, 6.6, 0.25, wallMat); wallBack.position.set(0, 3.3, -7.4);
+    wallBack.material.map.repeat.set(8, 1); wallGroup.add(wallBack);
+    var wallL = box(0.25, 6.6, 14.6, wallMat.clone()); wallL.position.set(-12.7, 3.3, 0);
+    wallL.material.map = ribTexture('#12233c', '#1d3a5c'); wallL.material.map.repeat.set(5, 1); wallGroup.add(wallL);
+    var wallR = box(0.25, 6.6, 14.6, wallL.material); wallR.position.set(12.7, 3.3, 0); wallGroup.add(wallR);
+    /* front side: low glass-like parapet so the hall stays visible */
+    var parapet = box(25.6, 1.6, 0.2, new THREE.MeshStandardMaterial({ color: 0x16324f, transparent: true, opacity: 0.5, roughness: 0.2, metalness: 0.4 }));
+    parapet.position.set(0, 0.8, 7.4); wallGroup.add(parapet);
+    addTimed(wallGroup, 0.16, 0.32);
 
+    /* racks: bright palette faces */
     var rackGeo = new THREE.BoxGeometry(0.9, 2.1, 1.1);
-    var rackMat = mat(0x27332b, { rough: 0.5 });
+    var rackMat = mat(0x223655, { rough: 0.45, metal: 0.4 });
     var faceGeo = new THREE.PlaneGeometry(0.78, 1.9);
     var rows = 4, per = 16, rackCount = rows * per;
     var racks = new THREE.InstancedMesh(rackGeo, rackMat, rackCount);
@@ -210,38 +236,43 @@
     var m4 = new THREE.Matrix4();
     var faceColor = new THREE.Color();
     var idx = 0;
+    var palette = [0xf9552f, 0xf8c953, 0x3987e5, 0xd6336c, 0x7fc8e0];
     for (var r = 0; r < rows; r++) for (var i = 0; i < per; i++) {
       var x = -9 + i * 1.2, z = -5.25 + r * 3.5;
       m4.makeTranslation(x, 1.05, z); racks.setMatrixAt(idx, m4);
       m4.makeTranslation(x, 1.05, z + 0.56); faces.setMatrixAt(idx, m4);
-      /* mint-to-sky range: botanical glow instead of the old amber/cyan */
-      if (Math.random() < 0.72) faceColor.setHSL(0.30 + Math.random() * 0.08, 0.45, 0.5 + Math.random() * 0.2);
-      else faceColor.setHSL(0.53, 0.5, 0.6 + Math.random() * 0.15);
+      faceColor.setHex(palette[Math.floor(Math.random() * palette.length)]);
+      faceColor.offsetHSL(0, 0, (Math.random() - 0.5) * 0.12);
       faces.setColorAt(idx, faceColor);
       idx++;
     }
     var rackGroup = new THREE.Group();
     rackGroup.add(racks); rackGroup.add(faces);
-    addTimed(rackGroup, 0.34, 0.66);
+    addTimed(rackGroup, 0.3, 0.62);
 
+    /* CRAC unit rows in berry */
     var cracGroup = new THREE.Group();
-    var cracMat = mat(0x222d26, { rough: 0.4, metal: 0.5, emissive: C.leaf, ei: 0.12 });
+    var cracMat = mat(0x3a1a30, { rough: 0.4, metal: 0.5, emissive: C.berryBright, ei: 0.28 });
     for (var ci = 0; ci < 5; ci++) {
-      var cA = box(1.6, 2.5, 1.0, cracMat); cA.position.set(-10 + ci * 5, 1.25, -6.9); cracGroup.add(cA);
-      var cB = box(1.6, 2.5, 1.0, cracMat); cB.position.set(-10 + ci * 5, 1.25, 6.9); cracGroup.add(cB);
+      var cA = box(1.6, 2.5, 1.0, cracMat); cA.position.set(-10 + ci * 5, 1.25, -6.6); cracGroup.add(cA);
+      var cB = box(1.6, 2.5, 1.0, cracMat); cB.position.set(-10 + ci * 5, 1.25, 6.6); cracGroup.add(cB);
     }
-    addTimed(cracGroup, 0.6, 0.78);
+    addTimed(cracGroup, 0.58, 0.74);
 
+    /* overhead gold trays + blue pipes */
     var trayGroup = new THREE.Group();
-    var trayMat = mat(C.fern, { rough: 0.6, metal: 0.4, emissive: C.fern, ei: 0.28 });
+    var trayMat = mat(C.gold, { rough: 0.5, metal: 0.5, emissive: C.gold, ei: 0.35 });
     for (var tr = 0; tr < rows; tr++) {
       var tray = box(19.6, 0.12, 0.5, trayMat);
-      tray.position.set(0, 3.1, -5.25 + tr * 3.5); trayGroup.add(tray);
+      tray.position.set(0, 3.15, -5.25 + tr * 3.5); trayGroup.add(tray);
     }
-    addTimed(trayGroup, 0.74, 0.9);
+    var pipe1 = tube([new THREE.Vector3(-10, 3.7, 0), new THREE.Vector3(10, 3.7, 0)], 0.1, mat(C.blue, { emissive: C.blue, ei: 0.5 }), 8);
+    var pipe2 = tube([new THREE.Vector3(-10, 3.95, 0.35), new THREE.Vector3(10, 3.95, 0.35)], 0.08, mat(C.blueLight, { emissive: C.blueLight, ei: 0.5 }), 8);
+    trayGroup.add(pipe1); trayGroup.add(pipe2);
+    addTimed(trayGroup, 0.7, 0.88);
 
     var CYCLE = reduceMotion ? 0 : 22000;
-    var t0 = performance.now() - CYCLE * 0.52;
+    var t0 = performance.now() - CYCLE * 0.55;
     var visible = true;
     onVisible(hero, function (v) { visible = v; });
 
@@ -269,7 +300,7 @@
   }
 
   /* ============================================================
-     DEMO: DATA
+     DEMO DATA
      ============================================================ */
   var TRACKER_STAGES = ['Site Selection', 'Preconstruction', 'Design', 'Construction', 'Procurement', 'Fit-out', 'Operations'];
   var FITOUT_INDEX = 5;
@@ -285,35 +316,36 @@
   ];
 
   var VENDORS = {
-    vertiv: { name: 'Vertiv VR', w: 0.6, d: 1.2, h: 2.0, u: 48, gap: 0.5, frame: 0x252b2e, door: '#33393c', perf: 6, plinth: 0x1a1f22 },
-    rittal: { name: 'Rittal TS IT', w: 0.8, d: 1.2, h: 2.2, u: 42, gap: 0.42, frame: 0x3a4147, door: '#464e54', perf: 8, plinth: 0x22272b },
+    vertiv: { name: 'Vertiv VR', w: 0.6, d: 1.2, h: 2.0, u: 48, gap: 0.5, frame: 0x1e2c40, door: '#26364e', perf: 6 },
+    rittal: { name: 'Rittal TS IT', w: 0.8, d: 1.2, h: 2.2, u: 42, gap: 0.42, frame: 0x31435f, door: '#3c5070', perf: 8 },
   };
   var GPUS = {
-    h100: { name: 'NVIDIA HGX H100', color: 0x199e70 },
+    h100: { name: 'NVIDIA HGX H100', color: 0x3fd08a },
     gb200: { name: 'NVIDIA GB200 NVL', color: 0x9085e9 },
   };
   var TURBINES = { francis: 'Francis runner', kaplan: 'Kaplan runner' };
-  var HYDRO_OEMS = { voith: { name: 'Voith', color: C.leaf }, andritz: { name: 'Andritz', color: C.sky } };
+  var HYDRO_OEMS = { voith: { name: 'Voith', color: 0xf8c953 }, andritz: { name: 'Andritz', color: 0x9cc4e0 } };
 
   var MEP_LEGEND_DC = [
-    { c: '#e15b78', t: 'Power feed A (busway)' },
-    { c: '#9085e9', t: 'Power feed B (busway)' },
+    { c: '#d6336c', t: 'Power feed A (busway + drops)' },
+    { c: '#9085e9', t: 'Power feed B (busway + drops)' },
     { c: '#3987e5', t: 'Chilled water supply' },
     { c: '#7fc8e0', t: 'Chilled water return' },
-    { c: '#9aa8a0', t: 'Cable tray' },
-    { c: '#69a35e', t: 'Hot aisle containment' },
+    { c: '#9aa8b5', t: 'Cable tray' },
+    { c: '#f9552f', t: 'Hot aisle containment' },
+    { c: '#4a90d9', t: 'Cold aisle' },
   ];
   var MEP_LEGEND_HYDRO = [
     { c: '#3987e5', t: 'Water path (penstock, draft tube)' },
-    { c: '#69a35e', t: 'Generation (turbine + generator)' },
-    { c: '#e15b78', t: 'Transmission (transformer, switchyard)' },
+    { c: '#f8c953', t: 'Generation (turbine + generator)' },
+    { c: '#d6336c', t: 'Transmission (transformer, switchyard)' },
     { c: '#8a9088', t: 'Civil structure' },
   ];
 
   var SITES = [
     {
       id: 'vega', name: 'Vega Campus', loc: 'Texas Panhandle', type: 'dc', tag: 'Operating',
-      desc: 'Compute campus, direct to chip liquid cooling, racks to 180 kW',
+      desc: 'Compute campus, liquid cooling, racks to 180 kW',
       finance: [
         ['IT capacity', '205 MW'],
         ['Colocation revenue', '$110M to $120M / yr'],
@@ -335,7 +367,7 @@
     },
     {
       id: 'beacon', name: 'Beacon Point', loc: 'Nueces County, Texas', type: 'dc2', tag: 'Under construction',
-      desc: 'AI campus to NVIDIA DSX reference design, liquid cooled',
+      desc: 'AI campus to NVIDIA DSX reference design',
       finance: [
         ['First lease', '352 MW IT, $9.8B base term'],
         ['Full campus', '704 MW, $19.6B contracted'],
@@ -357,7 +389,7 @@
     },
     {
       id: 'hydro', name: 'Hydro Station', loc: 'Portfolio concept', type: 'hydro', tag: 'Concept',
-      desc: 'Power first: same loop, pointed at generation assets',
+      desc: 'Power first: same loop, pointed at generation',
       finance: [
         ['Nameplate', '3 units x 54 MW (162 MW)'],
         ['Gross head', '88 ft'],
@@ -379,25 +411,29 @@
     },
   ];
 
-  /* ============================================================
-     DEMO: STATE + DOM
-     ============================================================ */
   var demoState = {
     site: 'vega',
     vendor: 'vertiv', gpu: 'h100', n2: false,
     turbine: 'francis', oem: 'voith', n1: false,
   };
 
+  /* ============================================================
+     DEMO UI
+     ============================================================ */
   function initDemo() {
     buildMiniTracker();
     buildRibbon();
+    buildHud();
     buildSiteRail();
     selectSite('vega');
-    if (canRender) initDemoGL();
-    else {
+    if (canRender) {
+      initDemoGL();
+      makeThumbnails();
+    } else {
       document.getElementById('demo-fallback').style.display = 'flex';
       document.getElementById('demo-canvas').style.display = 'none';
     }
+    initTutorial();
   }
 
   function buildMiniTracker() {
@@ -421,7 +457,8 @@
       b.type = 'button';
       b.setAttribute('aria-label', d.name);
       b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + d.icon + '</svg><span>' + d.name + '</span>';
-      b.addEventListener('click', function () {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
         if (openKey === d.key) { sheet.classList.remove('open'); openKey = null; setActive(null); return; }
         openKey = d.key;
         sheet.innerHTML = '<h4>' + d.name + '</h4><p>' + d.text + '</p>';
@@ -438,17 +475,37 @@
     });
   }
 
+  /* drawers + popovers behind burger buttons */
+  var panels = {};
+  function buildHud() {
+    panels = {
+      sites: { btn: document.getElementById('hud-sites'), el: document.getElementById('drawer-sites') },
+      data: { btn: document.getElementById('hud-data'), el: document.getElementById('drawer-data') },
+      legend: { btn: document.getElementById('hud-legend'), el: document.getElementById('pop-legend') },
+      generate: { btn: document.getElementById('hud-generate'), el: document.getElementById('pop-generate') },
+    };
+    Object.keys(panels).forEach(function (k) {
+      panels[k].btn.addEventListener('click', function () { togglePanel(k); });
+    });
+  }
+  function togglePanel(key, force) {
+    Object.keys(panels).forEach(function (k) {
+      var on = k === key ? (force != null ? force : !panels[k].el.classList.contains('open')) : false;
+      panels[k].el.classList.toggle('open', on);
+      panels[k].btn.classList.toggle('open', on);
+    });
+  }
+
   function buildSiteRail() {
-    var rail = document.getElementById('site-rail');
-    var actions = document.getElementById('rail-actions');
+    var rail = document.getElementById('drawer-sites');
     SITES.forEach(function (s) {
       var b = document.createElement('button');
       b.className = 'site-btn';
       b.type = 'button';
       b.id = 'site-' + s.id;
-      b.innerHTML = '<b>' + s.name + '</b><span>' + s.loc + ' · ' + s.desc + '</span><span class="tag">' + s.tag + '</span>';
+      b.innerHTML = '<img id="thumb-' + s.id + '" alt="" aria-hidden="true"><span class="sb-txt"><b>' + s.name + '</b><span>' + s.loc + ' · ' + s.desc + '</span><span class="tag">' + s.tag + '</span></span>';
       b.addEventListener('click', function () { selectSite(s.id); });
-      rail.insertBefore(b, actions);
+      rail.appendChild(b);
     });
   }
 
@@ -460,7 +517,7 @@
     document.querySelectorAll('.site-btn').forEach(function (b) { b.classList.toggle('active', b.id === 'site-' + id); });
     document.getElementById('site-title').innerHTML = '<b>' + site.name + '</b><span>' + site.loc + '</span>';
     var legend = site.type === 'hydro' ? MEP_LEGEND_HYDRO : MEP_LEGEND_DC;
-    document.getElementById('mep-legend').innerHTML =
+    document.getElementById('pop-legend').innerHTML =
       '<div class="lt">' + (site.type === 'hydro' ? 'Systems' : 'MEP color code') + '</div>' +
       legend.map(function (l) { return '<div class="row"><i style="background:' + l.c + '"></i>' + l.t + '</div>'; }).join('');
     renderActions(site);
@@ -470,15 +527,15 @@
   }
 
   function renderActions(site) {
-    var el = document.getElementById('rail-actions');
-    var html = '<div class="rail-title">Generate, live</div>';
+    var el = document.getElementById('gen-btns');
+    var html;
     if (site.type === 'hydro') {
-      html +=
+      html =
         '<button class="act-btn" id="act-1" type="button"><b>Swap turbine runner</b><span>Francis to Kaplan and back. Draft tube and shaft re-check automatically.</span></button>' +
         '<button class="act-btn" id="act-2" type="button"><b>Swap generator OEM</b><span>Voith to Andritz. Numbering of every unit and breaker preserved.</span></button>' +
         '<button class="act-btn" id="act-3" type="button"><b>Toggle N+1 penstock</b><span>Add the redundant water path. Thrust blocks re-check.</span></button>';
     } else {
-      html +=
+      html =
         '<button class="act-btn" id="act-1" type="button"><b>Swap cabinet vendor</b><span>Vertiv VR to Rittal TS IT. Containment and busway re-fit, aisles hold clearance.</span></button>' +
         '<button class="act-btn" id="act-2" type="button"><b>Swap the GPUs</b><span>HGX H100 to GB200 NVL. Numbering of every CPU, switch, and GPU preserved.</span></button>' +
         '<button class="act-btn" id="act-3" type="button"><b>Toggle 2N cooling</b><span>Re-wire redundant power to the cooling units. A and B paths, live.</span></button>';
@@ -498,8 +555,9 @@
   }
 
   function renderDataPanel(site) {
-    var el = document.getElementById('demo-data');
-    var html = '<div class="dd-block"><div class="dd-title">Financials</div>' +
+    var el = document.getElementById('drawer-data');
+    var html = '<div class="rail-title">' + site.name + '</div>';
+    html += '<div class="dd-block"><div class="dd-title">Financials</div>' +
       site.finance.map(function (f) { return '<div class="dd-stat"><span>' + f[0] + '</span><b>' + f[1] + '</b></div>'; }).join('') + '</div>';
     html += '<div class="dd-block"><div class="dd-title">Clash feed (sample)</div>' +
       site.clashes.map(function (c) {
@@ -538,7 +596,7 @@
     } else {
       var v = VENDORS[demoState.vendor];
       obj = {
-        asset: site.id === 'beacon' ? 'CAB-BP1-ROW2' : 'CAB-VG3-ROW1',
+        asset: site.id === 'beacon' ? 'CAB-BP1-POD2' : 'CAB-VG3-POD1',
         coordinates: [412.5, 96.0, 14.2],
         parameters: {
           make: v.name,
@@ -560,9 +618,10 @@
   }
 
   /* ============================================================
-     DEMO: 3D SCENES
+     DEMO 3D
      ============================================================ */
   var applyScene = function () { refreshDemoJson(); };
+  var getSceneRef = null;
 
   function initDemoGL() {
     var stage = document.getElementById('demo-stage');
@@ -577,42 +636,44 @@
 
     function baseScene(bg) {
       var scene = new THREE.Scene();
-      scene.background = new THREE.Color(bg || 0x0b110c);
-      scene.add(new THREE.AmbientLight(0xa8bcaa, 0.7));
-      var key = new THREE.DirectionalLight(0xffffff, 1.0); key.position.set(8, 14, 5); scene.add(key);
-      var fill = new THREE.PointLight(C.mint, 14, 40); fill.position.set(-6, 6, -6); scene.add(fill);
+      scene.background = new THREE.Color(bg || 0x070c18);
+      scene.add(new THREE.AmbientLight(0xb8c4da, 0.85));
+      var key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(8, 14, 5); scene.add(key);
+      var fill = new THREE.PointLight(C.gold, 20, 45); fill.position.set(-6, 7, -6); scene.add(fill);
+      var fill2 = new THREE.PointLight(C.blue, 14, 40); fill2.position.set(6, 5, 6); scene.add(fill2);
       return scene;
     }
 
-    /* -------- detailed cabinet -------- */
-    function makeCabinet(num, ri) {
+    function makeCabinet(num, podColor) {
       var g = new THREE.Group();
-      var parts = { plinth: null, frame: null, door: null, sides: [], top: null, shelves: [], modules: [], pduA: null, pduB: null, sprite: null };
-      parts.plinth = box(1, 1, 1, mat(0x161b1e, { rough: 0.7 })); g.add(parts.plinth);
-      parts.frame = box(1, 1, 1, mat(0x252b2e, { rough: 0.5, metal: 0.5 })); g.add(parts.frame);
-      var doorMat = new THREE.MeshStandardMaterial({ map: perfTexture(6, '#33393c'), roughness: 0.6, metalness: 0.4 });
+      var parts = { plinth: null, frame: null, door: null, sides: [], top: null, shelves: [], modules: [], pduA: null, pduB: null, dropA: null, dropB: null, sprite: null };
+      parts.plinth = box(1, 1, 1, mat(0x0d1626, { rough: 0.7 })); g.add(parts.plinth);
+      parts.frame = box(1, 1, 1, mat(0x1e2c40, { rough: 0.5, metal: 0.5 })); g.add(parts.frame);
+      var doorMat = new THREE.MeshStandardMaterial({ map: perfTexture(6, '#26364e'), roughness: 0.6, metalness: 0.4 });
       parts.door = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), doorMat); g.add(parts.door);
       for (var s = 0; s < 2; s++) {
-        var side = box(1, 1, 1, mat(0x1d2225, { rough: 0.6 })); g.add(side); parts.sides.push(side);
+        var side = box(1, 1, 1, mat(0x16223a, { rough: 0.6 })); g.add(side); parts.sides.push(side);
       }
-      parts.top = box(1, 1, 1, mat(0x2a3134, { rough: 0.5, metal: 0.5 })); g.add(parts.top);
+      parts.top = box(1, 1, 1, mat(0x27395a, { rough: 0.5, metal: 0.5 })); g.add(parts.top);
       for (var u = 0; u < 4; u++) {
-        var shelf = box(1, 1, 1, mat(0x11171a, { rough: 0.7 })); g.add(shelf); parts.shelves.push(shelf);
+        var shelf = box(1, 1, 1, mat(0x0b1322, { rough: 0.7 })); g.add(shelf); parts.shelves.push(shelf);
         var rowMods = [];
         for (var m = 0; m < 4; m++) {
-          var mod = box(1, 1, 1, mat(0x199e70, { rough: 0.35, metal: 0.2, emissive: 0x199e70, ei: 0.5 }));
+          var mod = box(1, 1, 1, mat(0x3fd08a, { rough: 0.35, metal: 0.2, emissive: 0x3fd08a, ei: 0.55 }));
           g.add(mod); rowMods.push(mod);
         }
         parts.modules.push(rowMods);
       }
-      parts.pduA = box(1, 1, 1, mat(C.rose, { emissive: C.rose, ei: 0.35 })); g.add(parts.pduA);
-      parts.pduB = box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.35 })); g.add(parts.pduB);
-      parts.sprite = labelSprite(num, ri === 0 ? '#8fbe6e' : '#a8d8ea', 0.85); g.add(parts.sprite);
+      parts.pduA = box(1, 1, 1, mat(C.berryBright, { emissive: C.berryBright, ei: 0.4 })); g.add(parts.pduA);
+      parts.pduB = box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.4 })); g.add(parts.pduB);
+      parts.dropA = box(1, 1, 1, mat(C.berryBright, { emissive: C.berryBright, ei: 0.5 })); g.add(parts.dropA);
+      parts.dropB = box(1, 1, 1, mat(C.violet, { emissive: C.violet, ei: 0.5 })); g.add(parts.dropB);
+      parts.sprite = labelSprite(num, podColor, 0.8); g.add(parts.sprite);
       g.userData = parts;
       return g;
     }
 
-    function layoutCabinet(g, v, gpu, n2) {
+    function layoutCabinet(g, v, gpu, n2, buswayY) {
       var p = g.userData;
       var w = v.w, h = v.h, d = v.d;
       p.plinth.scale.set(w, 0.09, d); p.plinth.position.y = 0.045;
@@ -640,74 +701,137 @@
       p.pduA.scale.set(0.05, h * 0.85, 0.05); p.pduA.position.set(-w * 0.32, 0.09 + h / 2, -d / 2 + 0.05);
       p.pduB.scale.set(0.05, h * 0.85, 0.05); p.pduB.position.set(w * 0.32, 0.09 + h / 2, -d / 2 + 0.05);
       p.pduB.visible = n2;
-      p.sprite.position.set(0, h + 0.5, 0);
+      /* busway drops from overhead feed down to cabinet top */
+      var dropH = Math.max(0.15, buswayY - (h + 0.12));
+      p.dropA.scale.set(0.045, dropH, 0.045); p.dropA.position.set(-w * 0.25, h + 0.12 + dropH / 2, -d * 0.2);
+      p.dropB.scale.set(0.045, dropH, 0.045); p.dropB.position.set(w * 0.25, h + 0.12 + dropH / 2, -d * 0.2);
+      p.dropB.visible = n2;
+      p.sprite.position.set(0, h + 0.55, 0);
     }
 
-    /* -------- data center scene -------- */
+    /* -------- data center scene: hall + pods + aisles + connected MEP -------- */
     function buildDC(cfg) {
       var scene = baseScene();
-      var grid = new THREE.GridHelper(46, 46, 0x22301f, 0x121a13); scene.add(grid);
-      var rowsZ = cfg.rowsZ;
-      var N = cfg.perRow;
+      var hallW = cfg.span * 2 + 9, hallD = (cfg.rowsZ[cfg.rowsZ.length - 1] - cfg.rowsZ[0]) + 10;
+      var grid = new THREE.GridHelper(60, 60, 0x1d3a5c, 0x0e1728); scene.add(grid);
+
+      /* hall slab, walls, columns */
+      var slab = box(hallW, 0.18, hallD, mat(0x0c1424, { rough: 0.85, metal: 0.1 }));
+      slab.position.y = -0.09; scene.add(slab);
+      var wallMat = new THREE.MeshStandardMaterial({ map: ribTexture('#0f1e33', '#1a3350'), roughness: 0.6, metalness: 0.3, transparent: true, opacity: 0.92 });
+      var wBack = box(hallW, 4.6, 0.2, wallMat); wBack.position.set(0, 2.3, -hallD / 2);
+      wBack.material.map.repeat.set(10, 1); scene.add(wBack);
+      var wallMatSide = wallMat.clone(); wallMatSide.map = ribTexture('#0f1e33', '#1a3350'); wallMatSide.map.repeat.set(6, 1);
+      var wL = box(0.2, 4.6, hallD, wallMatSide); wL.position.set(-hallW / 2, 2.3, 0); scene.add(wL);
+      var wR = box(0.2, 4.6, hallD, wallMatSide); wR.position.set(hallW / 2, 2.3, 0); scene.add(wR);
+      var paraF = box(hallW, 1.1, 0.15, new THREE.MeshStandardMaterial({ color: 0x14294a, transparent: true, opacity: 0.45, roughness: 0.25, metalness: 0.4 }));
+      paraF.position.set(0, 0.55, hallD / 2); scene.add(paraF);
+      var colMat = mat(0x27436a, { rough: 0.45, metal: 0.65 });
+      for (var kx = -1; kx <= 1; kx++) for (var kz = 0; kz < 2; kz++) {
+        var colm = box(0.35, 4.6, 0.35, colMat);
+        colm.position.set(kx * (hallW / 2 - 1.6), 2.3, (kz ? 1 : -1) * (hallD / 2 - 1.4));
+        scene.add(colm);
+      }
+      /* roof edge beams */
+      var rb1 = box(hallW, 0.25, 0.25, colMat); rb1.position.set(0, 4.6, -hallD / 2 + 0.1); scene.add(rb1);
+      var rb2 = box(hallW, 0.25, 0.25, colMat); rb2.position.set(0, 4.6, hallD / 2 - 0.1); scene.add(rb2);
+
+      var rowsZ = cfg.rowsZ, N = cfg.perRow;
+      var podSize = 3; /* cabinets per pod */
       var cabs = [];
       rowsZ.forEach(function (rz, ri) {
         for (var i = 0; i < N; i++) {
           var num = 'C' + ((ri * N + i + 1) < 10 ? '0' : '') + (ri * N + i + 1);
-          var cab = makeCabinet(num, ri % 2);
+          var podColor = (Math.floor(i / podSize) % 2 === 0) ? '#f8c953' : '#9cc4e0';
+          var cab = makeCabinet(num, podColor);
           scene.add(cab);
           cabs.push({ g: cab, row: ri, i: i });
         }
       });
 
-      /* containment volume over each hot aisle (between row pairs) */
-      var contains = [];
-      for (var cp = 0; cp < rowsZ.length - 1; cp++) {
-        var cm = box(1, 1, 1, new THREE.MeshStandardMaterial({ color: C.fern, transparent: true, opacity: 0.30, roughness: 0.5 }));
-        scene.add(cm); contains.push(cm);
-      }
+      /* pod portal frames + labels (per pod, per row) */
+      var podFrames = [];
+      var nPods = Math.ceil(N / podSize);
+      rowsZ.forEach(function (rz, ri) {
+        for (var pp = 0; pp < nPods; pp++) {
+          var pf = new THREE.Group();
+          var fm = mat(C.gold, { rough: 0.5, metal: 0.5, emissive: C.gold, ei: 0.18 });
+          var l1 = box(1, 1, 1, fm), l2 = box(1, 1, 1, fm), l3 = box(1, 1, 1, fm);
+          pf.add(l1); pf.add(l2); pf.add(l3);
+          var sp = labelSprite('POD ' + (ri * nPods + pp + 1), '#f8c953', 0.7);
+          pf.add(sp);
+          scene.add(pf);
+          podFrames.push({ g: pf, posts: [l1, l2], header: l3, sprite: sp, row: ri, pod: pp });
+        }
+      });
 
-      /* overhead systems along X */
+      /* hot aisle containment (orange) between row pairs + cold aisle strips (blue) outside */
+      var hotVols = [];
+      for (var cp = 0; cp < rowsZ.length - 1; cp++) {
+        var hv = box(1, 1, 1, new THREE.MeshStandardMaterial({ color: C.orange, transparent: true, opacity: 0.16, roughness: 0.5 }));
+        scene.add(hv); hotVols.push(hv);
+      }
+      var coldStrips = [];
+      rowsZ.forEach(function (rz, ri) {
+        var cs = box(1, 0.04, 1, new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.30, roughness: 0.4 }));
+        scene.add(cs); coldStrips.push(cs);
+      });
+
+      /* overhead systems, continuous to the walls */
       function runX(y, z, r, color, ei) {
-        var m = tube([new THREE.Vector3(-cfg.span, y, z), new THREE.Vector3(cfg.span, y, z)], r, mat(color, { emissive: color, ei: ei != null ? ei : 0.45, rough: 0.35 }), 8);
+        var m = tube([new THREE.Vector3(-hallW / 2 + 0.3, y, z), new THREE.Vector3(hallW / 2 - 0.3, y, z)], r, mat(color, { emissive: color, ei: ei != null ? ei : 0.45, rough: 0.35 }), 8);
         scene.add(m); return m;
       }
       var sys = {
         chwS: runX(3.5, 0, 0.075, C.blue),
         chwR: runX(3.5, 0.32, 0.06, C.blueLight),
-        buswayA: null, buswayB: null, trays: [],
+        buswayA: box(hallW - 0.6, 0.12, 0.2, mat(C.berryBright, { emissive: C.berryBright, ei: 0.4 })),
+        buswayB: box(hallW - 0.6, 0.12, 0.2, mat(C.violet, { emissive: C.violet, ei: 0.4 })),
       };
-      sys.buswayA = box(cfg.span * 2, 0.12, 0.2, mat(C.rose, { emissive: C.rose, ei: 0.4 })); scene.add(sys.buswayA);
-      sys.buswayB = box(cfg.span * 2, 0.12, 0.2, mat(C.violet, { emissive: C.violet, ei: 0.4 })); scene.add(sys.buswayB);
+      scene.add(sys.buswayA); scene.add(sys.buswayB);
+      /* cable trays: full width + vertical wall drops at both ends */
       rowsZ.forEach(function (rz) {
-        var rail1 = box(cfg.span * 2, 0.04, 0.04, mat(C.trayGray, { rough: 0.4, metal: 0.7 }));
-        var rail2 = rail1.clone(); var rungs = new THREE.Group();
+        var tm = mat(C.trayGray, { rough: 0.4, metal: 0.7 });
+        var rail1 = box(hallW - 0.6, 0.04, 0.04, tm), rail2 = box(hallW - 0.6, 0.04, 0.04, tm);
         rail1.position.set(0, 3.0, rz - 0.2); rail2.position.set(0, 3.0, rz + 0.2);
-        for (var x = -cfg.span + 0.5; x < cfg.span; x += 0.55) {
-          var rung = box(0.04, 0.03, 0.44, rail1.material);
-          rung.position.set(x, 3.0, rz); rungs.add(rung);
+        scene.add(rail1); scene.add(rail2);
+        for (var x = -hallW / 2 + 0.7; x < hallW / 2 - 0.4; x += 0.55) {
+          var rung = box(0.04, 0.03, 0.44, tm);
+          rung.position.set(x, 3.0, rz); scene.add(rung);
         }
-        scene.add(rail1); scene.add(rail2); scene.add(rungs);
-        sys.trays.push(rail1, rail2, rungs);
+        [-1, 1].forEach(function (side) {
+          var drop = box(0.04, 3.0, 0.44, tm);
+          drop.position.set(side * (hallW / 2 - 0.32), 1.5, rz);
+          scene.add(drop);
+        });
       });
 
-      /* CRAH units + liquid manifolds for the DSX-style hall */
+      /* CRAH units with CHW connections */
       function crah(x, z, col) {
         var g = new THREE.Group();
-        var body = box(1.3, 2.2, 0.9, mat(0x222d26, { rough: 0.4, metal: 0.5, emissive: col, ei: 0.15 }));
+        var body = box(1.3, 2.2, 0.9, mat(0x1a2b46, { rough: 0.4, metal: 0.5, emissive: col, ei: 0.15 }));
         body.position.y = 1.1; g.add(body);
-        var grille = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.6), new THREE.MeshStandardMaterial({ map: perfTexture(5, '#1a2420'), roughness: 0.7 }));
+        var grille = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.6), new THREE.MeshStandardMaterial({ map: perfTexture(5, '#132036'), roughness: 0.7 }));
         grille.position.set(0, 1.15, 0.46); g.add(grille);
         g.position.set(x, 0, z);
         scene.add(g); return g;
       }
-      var crahA = [crah(-cfg.span - 1.2, rowsZ[0], C.rose), crah(-cfg.span - 1.2, rowsZ[rowsZ.length - 1], C.rose)];
-      var crahB = [crah(cfg.span + 1.2, rowsZ[0], C.violet), crah(cfg.span + 1.2, rowsZ[rowsZ.length - 1], C.violet)];
+      var crahA = [], crahB = [], chwDrops = [];
+      [rowsZ[0], rowsZ[rowsZ.length - 1]].forEach(function (rz) {
+        crahA.push(crah(-cfg.span - 1.6, rz, C.berryBright));
+        crahB.push(crah(cfg.span + 1.6, rz, C.violet));
+        /* CHW elbow drops from mains to each CRAH */
+        var dA = tube([new THREE.Vector3(-cfg.span - 1.6, 3.5, 0), new THREE.Vector3(-cfg.span - 1.6, 3.5, rz * 0.6), new THREE.Vector3(-cfg.span - 1.6, 2.3, rz)], 0.06, mat(C.blue, { emissive: C.blue, ei: 0.5 }), 16);
+        var dB = tube([new THREE.Vector3(cfg.span + 1.6, 3.5, 0.32), new THREE.Vector3(cfg.span + 1.6, 3.5, rz * 0.6), new THREE.Vector3(cfg.span + 1.6, 2.3, rz)], 0.05, mat(C.blueLight, { emissive: C.blueLight, ei: 0.5 }), 16);
+        scene.add(dA); scene.add(dB);
+        chwDrops.push({ a: dA, b: dB });
+      });
 
       var manifolds = new THREE.Group();
       if (cfg.liquid) {
         rowsZ.forEach(function (rz) {
-          manifolds.add(tube([new THREE.Vector3(-cfg.span, 0.35, rz + 0.75), new THREE.Vector3(cfg.span, 0.35, rz + 0.75)], 0.05, mat(C.blue, { emissive: C.blue, ei: 0.5 }), 8));
-          manifolds.add(tube([new THREE.Vector3(-cfg.span, 0.2, rz + 0.75), new THREE.Vector3(cfg.span, 0.2, rz + 0.75)], 0.04, mat(C.blueLight, { emissive: C.blueLight, ei: 0.5 }), 8));
+          manifolds.add(tube([new THREE.Vector3(-cfg.span, 0.35, rz + 0.78), new THREE.Vector3(cfg.span, 0.35, rz + 0.78)], 0.05, mat(C.blue, { emissive: C.blue, ei: 0.5 }), 8));
+          manifolds.add(tube([new THREE.Vector3(-cfg.span, 0.2, rz + 0.78), new THREE.Vector3(cfg.span, 0.2, rz + 0.78)], 0.04, mat(C.blueLight, { emissive: C.blueLight, ei: 0.5 }), 8));
         });
         scene.add(manifolds);
       }
@@ -716,38 +840,59 @@
         var v = VENDORS[vendorKey];
         var pitch = v.w + v.gap;
         var span = (N - 1) * pitch;
+        var buswayY = v.h + 1.0;
         cabs.forEach(function (c) {
           c.g.position.set(-span / 2 + c.i * pitch, 0, rowsZ[c.row]);
-          layoutCabinet(c.g, v, gpuKey, n2);
+          layoutCabinet(c.g, v, gpuKey, n2, buswayY);
         });
-        contains.forEach(function (cm, k) {
-          cm.scale.set(span + v.w + 0.8, 0.65, Math.abs(rowsZ[k + 1] - rowsZ[k]) - v.d - 0.15);
-          cm.position.set(0, v.h + 0.75, (rowsZ[k] + rowsZ[k + 1]) / 2);
+        podFrames.forEach(function (pf) {
+          var startI = pf.pod * podSize;
+          var endI = Math.min(startI + podSize - 1, N - 1);
+          var x0 = -span / 2 + startI * pitch - v.w / 2 - 0.12;
+          var x1 = -span / 2 + endI * pitch + v.w / 2 + 0.12;
+          var z = rowsZ[pf.row];
+          pf.posts[0].scale.set(0.09, v.h + 0.5, 0.09); pf.posts[0].position.set(x0, (v.h + 0.5) / 2, z);
+          pf.posts[1].scale.set(0.09, v.h + 0.5, 0.09); pf.posts[1].position.set(x1, (v.h + 0.5) / 2, z);
+          pf.header.scale.set(x1 - x0, 0.09, 0.09); pf.header.position.set((x0 + x1) / 2, v.h + 0.5, z);
+          pf.sprite.position.set((x0 + x1) / 2, v.h + 0.95, z);
         });
-        sys.buswayA.position.set(0, v.h + 1.0, rowsZ[0] - 0.4);
-        sys.buswayB.position.set(0, v.h + 1.0, rowsZ[rowsZ.length - 1] + 0.4);
+        hotVols.forEach(function (hv, k) {
+          hv.scale.set(span + v.w + 0.8, 0.72, Math.abs(rowsZ[k + 1] - rowsZ[k]) - v.d - 0.15);
+          hv.position.set(0, v.h + 0.78, (rowsZ[k] + rowsZ[k + 1]) / 2);
+        });
+        coldStrips.forEach(function (cs, ri) {
+          /* cold aisles exist only on the outer faces; inner aisles are contained hot aisles */
+          var outer = ri === 0 || ri === rowsZ.length - 1;
+          cs.visible = outer;
+          if (!outer) return;
+          cs.scale.set(span + v.w + 1.2, 1, 0.9);
+          var z = rowsZ[ri] + (ri === 0 ? -1 : 1) * (v.d / 2 + 0.6);
+          cs.position.set(0, 0.03, z);
+        });
+        sys.buswayA.position.set(0, buswayY, rowsZ[0] - 0.4);
+        sys.buswayB.position.set(0, buswayY, rowsZ[rowsZ.length - 1] + 0.4);
         sys.buswayB.visible = n2;
         crahB.forEach(function (u) { u.visible = n2; });
+        chwDrops.forEach(function (d) { d.b.visible = n2; });
       }
 
       return {
         scene: scene, layout: layout,
-        target: { x: 0, y: 1.3, z: 0 }, radius: cfg.radius,
+        target: { x: 0, y: 1.2, z: 0 }, radius: cfg.radius,
         theta: 0.85, phi: 0.62,
         apply: function (st) { layout(st.vendor, st.gpu, st.n2); },
         tick: function () {},
       };
     }
 
-    /* -------- hydro scene -------- */
+    /* -------- hydro scene with hall columns + walls -------- */
     function buildHydro() {
-      var scene = baseScene(0x0a1010);
-      var grid = new THREE.GridHelper(60, 30, 0x22301f, 0x121a13); grid.position.y = -2.05; scene.add(grid);
+      var scene = baseScene(0x070d15);
+      var grid = new THREE.GridHelper(60, 30, 0x1d3a5c, 0x0e1728); grid.position.y = -2.05; scene.add(grid);
 
       var conc = mat(C.concrete, { rough: 0.85, metal: 0.05 });
       var concDark = mat(0x6d736c, { rough: 0.85, metal: 0.05 });
 
-      /* reservoir + dam */
       var upper = box(22, 0.25, 16, new THREE.MeshStandardMaterial({ color: C.water, transparent: true, opacity: 0.75, roughness: 0.15, metalness: 0.1 }));
       upper.position.set(-14, 5.1, 0); scene.add(upper);
       var dam = new THREE.Group();
@@ -759,12 +904,10 @@
         dam.add(seg);
       }
       scene.add(dam);
-      /* banks */
-      var bankMat = mat(0x2c4030, { rough: 0.95, metal: 0 });
+      var bankMat = mat(0x24363c, { rough: 0.95, metal: 0 });
       var bank1 = box(26, 8, 6, bankMat); bank1.position.set(-10, 2, -11); scene.add(bank1);
       var bank2 = box(26, 8, 6, bankMat); bank2.position.set(-10, 2, 11); scene.add(bank2);
 
-      /* penstocks (3 + N+1 fourth) */
       var penMat = mat(C.blue, { emissive: C.blue, ei: 0.25, rough: 0.35, metal: 0.5 });
       var pens = [];
       function penstock(z, ghost) {
@@ -779,58 +922,65 @@
       pens.push(penstock(-4), penstock(0), penstock(4));
       var penN1 = penstock(7.2, true); penN1.visible = false;
 
-      /* powerhouse shell */
-      var house = box(10, 6.4, 15.5, new THREE.MeshStandardMaterial({ color: 0x18231a, transparent: true, opacity: 0.16, roughness: 0.3, side: THREE.DoubleSide }));
-      house.position.set(7.5, 1.2, 0); scene.add(house);
+      /* powerhouse: slab, columns, low ribbed walls, translucent upper */
       var slab2 = box(10.5, 0.4, 16, concDark); slab2.position.set(7.5, -2.1, 0); scene.add(slab2);
-      /* crane beam */
-      var crane = box(9.6, 0.25, 0.5, mat(C.rose, { emissive: C.rose, ei: 0.2 })); crane.position.set(7.5, 4.1, 0); scene.add(crane);
+      var phWallMat = new THREE.MeshStandardMaterial({ map: ribTexture('#10202f', '#1c3a50'), roughness: 0.6, metalness: 0.3 });
+      var phBack = box(0.22, 2.4, 15.6, phWallMat); phBack.position.set(12.4, -0.7, 0); phBack.material.map.repeat.set(6, 1); scene.add(phBack);
+      var phFront = box(0.22, 2.4, 15.6, phWallMat.clone()); phFront.material.map = ribTexture('#10202f', '#1c3a50'); phFront.material.map.repeat.set(6, 1);
+      phFront.position.set(2.6, -0.7, 0); scene.add(phFront);
+      var house = box(10, 6.4, 15.5, new THREE.MeshStandardMaterial({ color: 0x122336, transparent: true, opacity: 0.14, roughness: 0.3, side: THREE.DoubleSide }));
+      house.position.set(7.5, 1.2, 0); scene.add(house);
+      var hColMat = mat(0x27436a, { rough: 0.45, metal: 0.65 });
+      for (var hc = -1; hc <= 1; hc++) {
+        [-7.2, 7.2].forEach(function (z) {
+          var colm = box(0.3, 6.2, 0.3, hColMat);
+          colm.position.set(7.5 + hc * 4.4, 1.1, z);
+          scene.add(colm);
+        });
+      }
+      var crane = box(9.6, 0.25, 0.5, mat(C.berryBright, { emissive: C.berryBright, ei: 0.2 })); crane.position.set(7.5, 4.1, 0); scene.add(crane);
 
-      /* turbine-generator units */
       var units = [];
       [-4, 0, 4].forEach(function (z, ui) {
         var u = new THREE.Group();
-        var volute = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.34, 10, 24), mat(C.fern, { rough: 0.4, metal: 0.5 }));
+        var volute = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.34, 10, 24), mat(0xd8ab35, { rough: 0.4, metal: 0.5 }));
         volute.rotation.x = Math.PI / 2; volute.position.y = -0.9; u.add(volute);
-        var runnerF = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.8, 12), mat(C.leaf, { emissive: C.leaf, ei: 0.4 }));
+        var runnerF = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.8, 12), mat(C.gold, { emissive: C.gold, ei: 0.4 }));
         runnerF.position.y = -0.55; u.add(runnerF);
         var runnerK = new THREE.Group();
         for (var b = 0; b < 4; b++) {
-          var blade = box(0.72, 0.06, 0.26, mat(C.leaf, { emissive: C.leaf, ei: 0.4 }));
+          var blade = box(0.72, 0.06, 0.26, mat(C.gold, { emissive: C.gold, ei: 0.4 }));
           blade.rotation.y = b * Math.PI / 2; blade.rotation.z = 0.5;
           blade.position.y = -0.55; runnerK.add(blade);
         }
         u.add(runnerK);
-        var shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2, 10), mat(0xb9c4bd, { metal: 0.8, rough: 0.3 }));
+        var shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2, 10), mat(0xb9c4c9, { metal: 0.8, rough: 0.3 }));
         shaft.position.y = 0.4; u.add(shaft);
-        var gen = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 1.1, 20), mat(C.leaf, { rough: 0.4, metal: 0.5 }));
+        var gen = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 1.1, 20), mat(C.gold, { rough: 0.4, metal: 0.5 }));
         gen.position.y = 1.6; u.add(gen);
-        var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12), mat(C.mint, { emissive: C.mint, ei: 0.5 }));
+        var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12), mat(0xfce3a0, { emissive: 0xfce3a0, ei: 0.5 }));
         cap.position.y = 2.3; u.add(cap);
-        var spinner = box(0.55, 0.06, 0.08, mat(0x0f1510)); spinner.position.y = 2.45; u.add(spinner);
-        /* draft tube out to tailrace */
+        var spinner = box(0.55, 0.06, 0.08, mat(0x0b1322)); spinner.position.y = 2.45; u.add(spinner);
         var draft = tube([new THREE.Vector3(0.4, -1.5, 0), new THREE.Vector3(2.6, -1.9, 0)], 0.42, penMat, 12);
         u.add(draft);
-        var sp = labelSprite('U' + (ui + 1), '#8fbe6e', 0.8); sp.position.set(0, 3.1, 0); u.add(sp);
+        var sp = labelSprite('U' + (ui + 1), '#f8c953', 0.8); sp.position.set(0, 3.1, 0); u.add(sp);
         u.position.set(6.2, 0, z);
         scene.add(u);
-        units.push({ g: u, gen: gen, cap: cap, spinner: spinner, runnerF: runnerF, runnerK: runnerK });
+        units.push({ g: u, gen: gen, spinner: spinner, runnerF: runnerF, runnerK: runnerK });
       });
 
-      /* tailrace */
       var tail = box(9, 0.2, 15, new THREE.MeshStandardMaterial({ color: C.water, transparent: true, opacity: 0.6, roughness: 0.2 }));
       tail.position.set(14.5, -1.95, 0); scene.add(tail);
 
-      /* transformers + switchyard */
       [-4, 0, 4].forEach(function (z) {
         var t = new THREE.Group();
-        var body = box(1.3, 1.15, 0.95, mat(C.rose, { rough: 0.5, metal: 0.4 })); body.position.y = 0.58; t.add(body);
+        var body = box(1.3, 1.15, 0.95, mat(C.berryBright, { rough: 0.5, metal: 0.4 })); body.position.y = 0.58; t.add(body);
         for (var f = 0; f < 4; f++) {
-          var fin = box(0.06, 0.9, 0.8, mat(0xc06a80, { rough: 0.5 }));
+          var fin = box(0.06, 0.9, 0.8, mat(0xe06a94, { rough: 0.5 }));
           fin.position.set(-0.75 - f * 0.09, 0.58, 0); t.add(fin);
         }
         for (var bsh = 0; bsh < 3; bsh++) {
-          var b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8), mat(0xd9dfd6, { rough: 0.4 }));
+          var b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8), mat(0xdfe4ea, { rough: 0.4 }));
           b2.position.set(-0.25 + bsh * 0.35, 1.4, 0); t.add(b2);
         }
         t.scale.set(1.4, 1.4, 1.4);
@@ -838,10 +988,10 @@
       });
       for (var py = 0; py < 2; py++) {
         var pylon = new THREE.Group();
-        var mast = box(0.16, 4.2, 0.16, mat(0x9aa8a0, { metal: 0.7, rough: 0.4 })); mast.position.y = 2.1; pylon.add(mast);
+        var mast = box(0.16, 4.2, 0.16, mat(0x9aa8b5, { metal: 0.7, rough: 0.4 })); mast.position.y = 2.1; pylon.add(mast);
         var arm = box(2.6, 0.12, 0.12, mast.material); arm.position.y = 3.7; pylon.add(arm);
         pylon.position.set(15.6 + py * 2.8, -2, -5.6); scene.add(pylon);
-        var line = tube([new THREE.Vector3(12.8, -0.2, -4), new THREE.Vector3(15.6 + py * 2.8, 1.7, -5.6)], 0.025, mat(C.rose, { emissive: C.rose, ei: 0.4 }), 10);
+        var line = tube([new THREE.Vector3(12.8, -0.2, -4), new THREE.Vector3(15.6 + py * 2.8, 1.7, -5.6)], 0.025, mat(C.berryBright, { emissive: C.berryBright, ei: 0.4 }), 10);
         scene.add(line);
       }
 
@@ -870,12 +1020,13 @@
     function getScene(id) {
       if (scenes[id]) return scenes[id];
       var s;
-      if (id === 'vega') s = buildDC({ rowsZ: [-1.9, 1.9], perRow: 6, span: 4.6, radius: 16.5, liquid: false });
-      else if (id === 'beacon') s = buildDC({ rowsZ: [-3.4, 0, 3.4], perRow: 7, span: 5.2, radius: 20, liquid: true });
+      if (id === 'vega') s = buildDC({ rowsZ: [-1.9, 1.9], perRow: 6, span: 4.6, radius: 17, liquid: false });
+      else if (id === 'beacon') s = buildDC({ rowsZ: [-3.4, 0, 3.4], perRow: 7, span: 5.2, radius: 21, liquid: true });
       else s = buildHydro();
       scenes[id] = s;
       return s;
     }
+    getSceneRef = getScene;
 
     window.__setScene = function (id) {
       current = getScene(id);
@@ -904,8 +1055,116 @@
     requestAnimationFrame(tick);
   }
 
+  /* site thumbnails for the portfolio menu: real renders of each scene */
+  function makeThumbnails() {
+    if (!getSceneRef) return;
+    try {
+      var tr = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      tr.setSize(148, 96);
+      var tc = new THREE.PerspectiveCamera(45, 148 / 96, 0.1, 300);
+      SITES.forEach(function (s) {
+        var sc = getSceneRef(s.id);
+        sc.apply(demoState);
+        var o = { theta: sc.theta || 0.85, phi: sc.phi || 0.62, radius: sc.radius };
+        camFromOrbit(tc, o, sc.target);
+        tc.aspect = 148 / 96; tc.updateProjectionMatrix();
+        tr.render(sc.scene, tc);
+        var img = document.getElementById('thumb-' + s.id);
+        if (img) img.src = tr.domElement.toDataURL('image/jpeg', 0.82);
+      });
+      tr.dispose();
+    } catch (e) { /* thumbnails are decorative; never break the demo */ }
+  }
+
   /* ============================================================
-     MONEY CHART (landing)
+     TUTORIAL: game-style guided tour
+     ============================================================ */
+  function initTutorial() {
+    var tut = document.getElementById('tut');
+    var dim = document.getElementById('tut-dim');
+    var spot = document.getElementById('tut-spot');
+    var card = document.getElementById('tut-card');
+    var stepLabel = document.getElementById('tut-step-label');
+    var title = document.getElementById('tut-title');
+    var text = document.getElementById('tut-text');
+    var dots = document.getElementById('tut-dots');
+    var btnNext = document.getElementById('tut-next');
+    var btnSkip = document.getElementById('tut-skip');
+
+    var STEPS = [
+      { target: '#demo-stage', title: 'Welcome to Yurt 8', text: 'This is the live demo of the tool. Sixty seconds, six stops, and then it is all yours. Hit Next.', full: true },
+      { target: '#demo-stage', title: 'The site, in 3D', text: 'Drag anywhere to orbit the site. Scroll or pinch to zoom. The model keeps moving on its own until you grab it.', full: true },
+      { target: '.mini-tracker', title: 'The pizza tracker', text: 'Every project moves along this tracker, stage by stage, like a pizza order. This one is parked at Fit-out: racks, power, and cooling going in.' },
+      { target: '#hud-sites', title: 'The portfolio', text: 'This menu holds the sites. Two data centers and a hydro station. Pick one and the whole scene, the money, and the clash feed swap with it.', open: 'sites' },
+      { target: '#hud-generate', title: 'Generate, live', text: 'These buttons run real design moves: swap cabinet vendors, swap GPUs, toggle redundant cooling. Watch the model re-fit itself and keep every asset number.', open: 'generate' },
+      { target: '#hud-data', title: 'The site data', text: 'Financials, a sample clash feed with dollars attached, and the JSON schema every click writes. This is the language the whole system speaks.', open: 'data' },
+      { target: '#demo-ribbon', title: 'Seven disciplines', text: 'These run under every stage, from the first land scan to year twenty of operations. Tap any icon for the plain language version.' },
+      { target: '#demo-stage', title: 'That is the tool', text: 'Poke around. If you want the story and the numbers behind it, the Detailed Summary and the PDF are one click from the start page.', full: true },
+    ];
+    var idx = 0, active = false;
+
+    dots.innerHTML = STEPS.map(function () { return '<i></i>'; }).join('');
+
+    function place() {
+      var st = STEPS[idx];
+      var t = document.querySelector(st.target);
+      var r = t.getBoundingClientRect();
+      if (st.full) {
+        var stg = document.getElementById('demo-stage').getBoundingClientRect();
+        var w = Math.min(420, stg.width * 0.5), h = Math.min(260, stg.height * 0.45);
+        spot.style.left = (stg.left + stg.width / 2 - w / 2) + 'px';
+        spot.style.top = (stg.top + stg.height / 2 - h / 2 - 30) + 'px';
+        spot.style.width = w + 'px'; spot.style.height = h + 'px';
+        card.style.left = (stg.left + stg.width / 2 - Math.min(340, window.innerWidth * 0.86) / 2) + 'px';
+        card.style.top = (stg.top + stg.height / 2 + h / 2 - 10) + 'px';
+      } else {
+        spot.style.left = (r.left - 8) + 'px';
+        spot.style.top = (r.top - 8) + 'px';
+        spot.style.width = (r.width + 16) + 'px';
+        spot.style.height = (r.height + 16) + 'px';
+        var cw = Math.min(340, window.innerWidth * 0.86);
+        var cx = Math.max(12, Math.min(window.innerWidth - cw - 12, r.left + r.width / 2 - cw / 2));
+        var below = r.bottom + 14;
+        var cy = below + 230 < window.innerHeight ? below : Math.max(12, r.top - 240);
+        card.style.left = cx + 'px';
+        card.style.top = cy + 'px';
+      }
+      stepLabel.textContent = 'Step ' + (idx + 1) + ' of ' + STEPS.length;
+      title.textContent = st.title;
+      text.textContent = st.text;
+      btnNext.textContent = idx === STEPS.length - 1 ? 'Finish' : 'Next';
+      Array.prototype.forEach.call(dots.children, function (d, i) { d.className = i <= idx ? 'on' : ''; });
+      if (st.open) togglePanel(st.open, true);
+      else togglePanel('none', false);
+    }
+    function start() {
+      idx = 0; active = true;
+      tut.classList.add('on');
+      place();
+    }
+    function stop() {
+      active = false;
+      tut.classList.remove('on');
+      togglePanel('none', false);
+      try { localStorage.setItem('yurt8TutorialDone', '1'); } catch (e) {}
+    }
+    btnNext.addEventListener('click', function () {
+      if (idx >= STEPS.length - 1) { stop(); return; }
+      idx++; place();
+    });
+    btnSkip.addEventListener('click', stop);
+    dim.addEventListener('click', stop);
+    window.addEventListener('resize', function () { if (active) place(); });
+    document.getElementById('btn-tutorial').addEventListener('click', start);
+    window.__tutStop = stop;
+
+    var seen = false;
+    try { seen = localStorage.getItem('yurt8TutorialDone') === '1'; } catch (e) {}
+    if (!seen) setTimeout(start, 600);
+  }
+
+  /* ============================================================
+     MONEY CHART (summary view)
      ============================================================ */
   (function moneyChart() {
     var root = document.getElementById('money-chart');
@@ -919,8 +1178,8 @@
     function y(v) { return padT + ih - (v / max) * ih; }
     var svg = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Program cost versus savings, year one and year two" style="width:100%;height:auto;display:block">'];
     for (var gv = 0; gv <= max; gv += max / 4) {
-      svg.push('<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y(gv) + '" y2="' + y(gv) + '" stroke="#22301f" stroke-width="1"/>');
-      svg.push('<text x="' + (padL - 8) + '" y="' + (y(gv) + 4) + '" text-anchor="end" font-size="11" fill="#71816e">$' + gv + 'M</text>');
+      svg.push('<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y(gv) + '" y2="' + y(gv) + '" stroke="#1d3a5c" stroke-width="1"/>');
+      svg.push('<text x="' + (padL - 8) + '" y="' + (y(gv) + 4) + '" text-anchor="end" font-size="11" fill="#67789a">$' + gv + 'M</text>');
     }
     var groupW = iw / data.length, barW = 34, gap2 = 2;
     function roundTopBar(x, yBase, w, h, r) {
@@ -935,12 +1194,12 @@
       var yc = y(d.cost), ys = y(d.savings);
       var hc = Math.max(3, padT + ih - yc), hs = Math.max(3, padT + ih - ys);
       svg.push('<path class="bar" data-tip="' + d.label + ' program cost: $' + d.cost.toFixed(2) + 'M" d="' + roundTopBar(x1, padT + ih, barW, hc, 4) + '" fill="#3987e5"/>');
-      svg.push('<path class="bar" data-tip="' + d.label + ' savings, conservative case: $' + d.savings.toFixed(1) + 'M" d="' + roundTopBar(x2, padT + ih, barW, hs, 4) + '" fill="#199e70"/>');
-      svg.push('<text x="' + (x1 + barW / 2) + '" y="' + (yc - 6) + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#edf3ea">$' + (d.cost < 1 ? d.cost.toFixed(2) : d.cost.toFixed(1)) + 'M</text>');
-      svg.push('<text x="' + (x2 + barW / 2) + '" y="' + (ys - 6) + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#edf3ea">$' + d.savings.toFixed(1) + 'M</text>');
-      svg.push('<text x="' + cx + '" y="' + (H - 10) + '" text-anchor="middle" font-size="12.5" fill="#a8b8a4">' + d.label + '</text>');
+      svg.push('<path class="bar" data-tip="' + d.label + ' savings, conservative case: $' + d.savings.toFixed(1) + 'M" d="' + roundTopBar(x2, padT + ih, barW, hs, 4) + '" fill="#e0561f"/>');
+      svg.push('<text x="' + (x1 + barW / 2) + '" y="' + (yc - 6) + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#f0f3f8">$' + (d.cost < 1 ? d.cost.toFixed(2) : d.cost.toFixed(1)) + 'M</text>');
+      svg.push('<text x="' + (x2 + barW / 2) + '" y="' + (ys - 6) + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#f0f3f8">$' + d.savings.toFixed(1) + 'M</text>');
+      svg.push('<text x="' + cx + '" y="' + (H - 10) + '" text-anchor="middle" font-size="12.5" fill="#a9b6c9">' + d.label + '</text>');
     });
-    svg.push('<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + (padT + ih) + '" y2="' + (padT + ih) + '" stroke="#3a4a38" stroke-width="1.5"/>');
+    svg.push('<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + (padT + ih) + '" y2="' + (padT + ih) + '" stroke="#2c4a72" stroke-width="1.5"/>');
     svg.push('</svg>');
     root.innerHTML = svg.join('');
     var tip = document.getElementById('chart-tip');
@@ -956,9 +1215,7 @@
     root.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
   })();
 
-  /* ============================================================
-     STAT TILE COUNT-UP (landing)
-     ============================================================ */
+  /* stat tile count-up (summary view) */
   if (!reduceMotion && 'IntersectionObserver' in window) {
     var tiles = document.querySelectorAll('.tile .v[data-count]');
     var io = new IntersectionObserver(function (es) {
