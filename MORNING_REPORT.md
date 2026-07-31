@@ -61,9 +61,12 @@ five minute version.
 
 ## What needs your eyes first
 
-1. **Merge the draft PR.** GitHub Pages serves /docs from main, so the live URL
-   updates only when the PR merges. That is the one manual step. I could not push to
-   main directly from this session (branch protection on my end, not yours).
+1. **Merge the draft PR:** https://github.com/PracticalConstructs/hut8-casestudy/pull/1
+   GitHub Pages serves /docs from main, so the live URL updates only when the PR
+   merges (about 2 minutes after). That is the one manual step. My session rules
+   blocked direct pushes to main. I am watching the PR: when you merge, I will fetch
+   the live URL and verify the deployed page renders, then note the result on the PR
+   if anything is wrong.
 2. **The money table splits** (page 2 / money section): my cost $250K year 1 rising
    to $350K year 2, hires at $520K combined, licensing $45K, cloud $55K. Sanity
    check against what you actually want to ask for.
