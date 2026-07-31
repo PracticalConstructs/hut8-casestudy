@@ -4,6 +4,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const { remapColors, PB_TYPE_CSS, PB_JS } = require('./pb-theme.js');
+
 const build = __dirname;
 const OUT = '/workspace/andres-portfolio/practical-bim.html';
 
@@ -12,11 +14,21 @@ let app = fs.readFileSync(path.join(build, 'app.js'), 'utf8');
 const three = fs.readFileSync(path.join(build, 'three.inline.js'), 'utf8');
 const fill = JSON.parse(fs.readFileSync(path.join(build, 'fill.json'), 'utf8'));
 
-const fontsCss = [400, 500, 700].map(w => {
-  const b64 = fs.readFileSync(path.join(build, 'node_modules', '@fontsource', 'space-grotesk', 'files',
-    `space-grotesk-latin-${w}-normal.woff2`)).toString('base64');
-  return `@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:${w};font-display:swap;src:url(data:font/woff2;base64,${b64}) format("woff2")}`;
-}).join('\n');
+/* Instrument Serif (display, italic) + Instrument Sans (body): the Rousseau
+   editorial type. Replaces Space Grotesk entirely in this build. */
+function face(pkg, family, weight, style) {
+  const b64 = fs.readFileSync(path.join(build, 'node_modules', '@fontsource', pkg, 'files',
+    `${pkg}-latin-${weight}-${style}.woff2`)).toString('base64');
+  return `@font-face{font-family:"${family}";font-style:${style};font-weight:${weight};font-display:swap;src:url(data:font/woff2;base64,${b64}) format("woff2")}`;
+}
+const fontsCss = [
+  face('instrument-serif', 'Instrument Serif', 400, 'normal'),
+  face('instrument-serif', 'Instrument Serif', 400, 'italic'),
+  face('instrument-sans', 'Instrument Sans', 400, 'normal'),
+  face('instrument-sans', 'Instrument Sans', 400, 'italic'),
+  face('instrument-sans', 'Instrument Sans', 500, 'normal'),
+  face('instrument-sans', 'Instrument Sans', 600, 'normal'),
+].join('\n');
 
 function must(s, from, to) {
   if (!s.includes(from)) throw new Error('scrub anchor missing: ' + from.slice(0, 70));
@@ -35,7 +47,7 @@ template = must(template, '{{FONTS_CSS}}', fontsCss);
 
 /* hero */
 template = must(template, '<h1>YURT <span class="eight">8</span></h1>\n    <div><span class="hero-badge">A case study for Hut 8</span></div>',
-  '<h1 style="font-size:clamp(40px,7.6vw,86px)">PRACTICAL <span class="eight">BIM</span></h1>\n    <div><span class="hero-badge">A working concept for owner operators</span></div>');
+  '<h1 style="font-size:clamp(46px,8.2vw,98px)">Practical <span class="eight">BIM</span></h1>\n    <div><span class="hero-badge">A working concept for owner operators</span></div>');
 template = must(template, '      <a class="btn btn-sky" href="Yurt8-Case-Study.pdf" download>PDF Condensed Summary</a>\n      <a class="btn btn-orange" href="#demo" id="btn-demo">Demo the Tool</a>\n      <a class="btn btn-gold" href="#summary" id="btn-summary">Detailed Summary</a>',
   '      <a class="btn btn-orange" href="#demo" id="btn-demo">Demo the Tool</a>\n      <a class="btn btn-gold" href="#summary" id="btn-summary">Detailed Summary</a>\n      <a class="btn btn-sky" href="index.html">Back to Portfolio</a>');
 template = template.split('YURT <span class="eight">8</span><span class="back">&larr; back</span>')
@@ -167,6 +179,15 @@ app = must(app, "/* Yurt 8 demo application v3. Three views: landing, detailed s
 template = template.split('Yurt 8 conforms to the work').join('Practical BIM conforms to the work');
 template = template.split('It is the same architecture Yurt 8 runs on.').join('It is the same architecture Practical BIM runs on.');
 template = template.split('aria-label="Yurt 8 demo"').join('aria-label="Practical BIM demo"');
+
+/* ---------------- Rousseau theme: palette, type, scene decoration ---------------- */
+template = remapColors(template);
+app = remapColors(app);
+template = must(template, '</head>', '<style>' + PB_TYPE_CSS + '</style>\n</head>');
+app = must(app, '      scenes[id] = s;', '      pbDecorate(s, id);\n      scenes[id] = s;');
+app = must(app, '    var CYCLE = reduceMotion ? 0 : 22000;',
+  '    pbHeroDecorate(scene);\n    var CYCLE = reduceMotion ? 0 : 22000;');
+app = must(app, '\n  route();', '\n' + PB_JS + '\n  route();');
 
 let html = template
   .replace('{{APP_JS}}', () => app)
